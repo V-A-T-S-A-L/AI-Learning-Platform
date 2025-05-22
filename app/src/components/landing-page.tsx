@@ -77,13 +77,14 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
           >
-            <Button
-              variant="outline"
-              className="hidden md:flex border-purple-500 text-purple-500 hover:bg-purple-950"
-              onClick={() => setIsModalOpen(true)}
-            >
-              Get Started
-            </Button>
+            <Link href="/login">
+              <Button
+                variant="outline"
+                className="hidden md:flex border-purple-500 text-purple-500 hover:bg-purple-950"
+              >
+                Login
+              </Button>
+            </Link>
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
