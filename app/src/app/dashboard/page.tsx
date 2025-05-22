@@ -3,12 +3,13 @@
 import { redirect } from "next/navigation"
 import { useRouter } from "next/navigation"
 import { PlusIcon, BookOpenIcon, MessageSquareIcon, FileTextIcon } from "lucide-react"
+import { Upload, Link, Mic, ArrowUp, Plus, Trash2, Menu, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import UploadDocumentDialog from "@/components/upload-document-dialog"
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from "react"
-import { User, onAuthStateChanged } from "firebase/auth"
+import { User, onAuthStateChanged, signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 
 // Mock data for previously uploaded documents
@@ -108,150 +109,134 @@ export default function HomePage() {
     )
 
     return (
-        <div className="min-h-screen bg-[#010206] text-gray-100">
-            <main className="container mx-auto py-8 px-4">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold">{greeting} {user.displayName}! 👋</h1>
-                        <p className="text-gray-400 mt-1">Upload documents, create flashcards, and study smarter</p>
+        <div className="min-h-screen bg-gradient-to-t from-black via-[#000] to-[#340258] text-white">
+            {/* Header */}
+            <header className="flex items-center justify-between p-4 border-b border-gray-800">
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                            <span className="text-black font-bold text-sm">FM</span>
+                        </div>
+                        <span className="text-xl font-semibold">FlashMe</span>
                     </div>
-                    <UploadDocumentDialog>
-                        <Button className="mt-4 md:mt-0 bg-purple-600 hover:bg-purple-700">
-                            <PlusIcon className="mr-2 h-4 w-4" />
-                            Upload Document
-                        </Button>
-                    </UploadDocumentDialog>
                 </div>
 
-                {/* Stats Section */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                    <Card className="bg-black border-gray-800">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Documents</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-purple-400">{userStats.totalDocuments}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-black border-gray-800">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Flashcards</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-purple-400">{userStats.totalFlashcards}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-black border-gray-800">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Study Streak</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-purple-400">{userStats.studyStreak} days</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-black border-gray-800">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-400">Last Studied</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-purple-400">{userStats.lastStudied}</div>
-                        </CardContent>
-                    </Card>
+                <div className="flex items-center gap-4">
+                    <button className="px-4 py-2 border border-green-500 text-green-500 rounded-lg hover:bg-green-500 hover:text-black transition-colors">
+                        Upgrade
+                    </button>
+                    <button onClick={() => signOut(auth)} className="cursor-pointer px-4 py-2 border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-500 hover:text-black transition-colors">
+                        Logout
+                    </button>
+                </div>
+            </header>
+
+            {/* Main Content */}
+            <main className="max-w-4xl mx-auto px-4 py-8">
+                {/* Practice with exams badge */}
+                <div className="flex justify-center mb-8">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-green-900/20 border border-green-500 rounded-full text-green-400 text-sm">
+                        <span className="px-2 py-1 bg-green-500 text-black text-xs rounded font-medium">NEW</span>
+                        <span>Practice with exams</span>
+                        <ArrowUp className="w-4 h-4 rotate-45" />
+                    </div>
                 </div>
 
-                {/* Recent Documents Section */}
-                <h2 className="text-xl font-semibold mb-4">Recent Documents</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                    {documents.map((doc) => (
-                        <Card
-                            key={doc.id}
-                            className="bg-gray-900 border-gray-800 overflow-hidden hover:border-purple-500 transition-all"
-                        >
-                            <div className="relative pt-[60%] bg-gray-800">
-                                <img
-                                    src={doc.thumbnail || "/placeholder.svg"}
-                                    alt={doc.title}
-                                    className="absolute inset-0 w-full h-full object-cover"
-                                />
-                                <div className="absolute top-2 right-2 bg-gray-900 text-xs px-2 py-1 rounded-md">{doc.type}</div>
+                {/* Main Heading */}
+                <h1 className="text-4xl md:text-5xl font-bold text-center mb-12">
+                    {greeting} {user?.displayName}! 👋
+                </h1>
+                <h1 className="text-4xl text-center mb-12">
+                    What do you want to learn today?
+                </h1>
+
+                {/* Action Cards */}
+                <UploadDocumentDialog>
+                    <div className="mb-8">
+                        {/* Upload Card */}
+                        <div className="flex flex-col items-center p-6 bg-gray-900 rounded-xl border border-purple-700 hover:border-purple-400 transition-colors cursor-pointer">
+                            <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center mb-3">
+                                <Upload className="w-6 h-6 text-gray-400" />
                             </div>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg font-medium truncate">{doc.title}</CardTitle>
-                                <CardDescription className="text-gray-400 text-xs">
-                                    Uploaded {doc.uploadedAt} • {doc.pages} pages
-                                </CardDescription>
-                            </CardHeader>
-                            <CardFooter className="pt-0 flex justify-between">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-purple-400 border-purple-800 hover:bg-purple-900/20"
-                                >
-                                    <BookOpenIcon className="h-4 w-4 mr-1" />
-                                    Flashcards
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-purple-400 border-purple-800 hover:bg-purple-900/20"
-                                >
-                                    <MessageSquareIcon className="h-4 w-4 mr-1" />
-                                    Chat
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
+                            <h3 className="font-semibold mb-1">Upload</h3>
+                            <p className="text-sm text-gray-400 text-center">File, Audio, Video</p>
+                        </div>
+                    </div>
+                </UploadDocumentDialog>
+
+                {/* AI Tutor Section */}
+                <div className="flex items-center justify-center gap-3 mb-12">
+                    <span className="text-gray-400">Or ask AI tutor</span>
+                    <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
+                        <ArrowUp className="w-5 h-5 text-gray-400" />
+                    </div>
                 </div>
 
-                {/* Quick Actions Section */}
-                <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card className="bg-gray-900 border-gray-800 hover:border-purple-500 transition-all">
-                        <CardHeader>
-                            <div className="w-12 h-12 rounded-full bg-purple-900/50 flex items-center justify-center mb-2">
-                                <FileTextIcon className="h-6 w-6 text-purple-400" />
+                {/* My Spaces Section */}
+                <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">My spaces</h2>
+                    <div className="flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-800">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gray-700 rounded flex items-center justify-center">
+                                <div className="w-4 h-4 border-2 border-gray-400 rounded"></div>
                             </div>
-                            <CardTitle>Browse All Documents</CardTitle>
-                            <CardDescription className="text-gray-400">Access your complete document library</CardDescription>
-                        </CardHeader>
-                        <CardFooter>
-                            <Button variant="ghost" className="text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 w-full">
-                                View Library
-                            </Button>
-                        </CardFooter>
-                    </Card>
+                            <span>Vatsal's Space</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+                                <Trash2 className="w-4 h-4 text-gray-400" />
+                            </button>
+                            <button className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">
+                                <Plus className="w-4 h-4" />
+                                <span className="text-sm">Add space</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-                    <Card className="bg-gray-900 border-gray-800 hover:border-purple-500 transition-all">
-                        <CardHeader>
-                            <div className="w-12 h-12 rounded-full bg-purple-900/50 flex items-center justify-center mb-2">
-                                <BookOpenIcon className="h-6 w-6 text-purple-400" />
-                            </div>
-                            <CardTitle>Study Flashcards</CardTitle>
-                            <CardDescription className="text-gray-400">Review your generated flashcards</CardDescription>
-                        </CardHeader>
-                        <CardFooter>
-                            <Button variant="ghost" className="text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 w-full">
-                                Start Studying
-                            </Button>
-                        </CardFooter>
-                    </Card>
+                {/* Continue Learning Section */}
+                <div>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-semibold">Continue learning</h2>
+                        <button className="text-sm text-gray-400 hover:text-white transition-colors">
+                            View all
+                        </button>
+                    </div>
 
-                    <Card className="bg-gray-900 border-gray-800 hover:border-purple-500 transition-all">
-                        <CardHeader>
-                            <div className="w-12 h-12 rounded-full bg-purple-900/50 flex items-center justify-center mb-2">
-                                <MessageSquareIcon className="h-6 w-6 text-purple-400" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Course Card 1 */}
+                        <div className="relative bg-gradient-to-br from-orange-500 to-red-500 rounded-xl p-6 text-white overflow-hidden">
+                            <div className="absolute top-2 left-2">
+                                <div className="flex items-center gap-1 px-2 py-1 bg-black/20 rounded text-xs">
+                                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                                    <span>Private</span>
+                                </div>
                             </div>
-                            <CardTitle>Chat with Documents</CardTitle>
-                            <CardDescription className="text-gray-400">Ask questions about your documents</CardDescription>
-                        </CardHeader>
-                        <CardFooter>
-                            <Button variant="ghost" className="text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 w-full">
-                                Start Chatting
-                            </Button>
-                        </CardFooter>
-                    </Card>
+                            <div className="mt-8">
+                                <h3 className="font-bold text-lg mb-1">CRYPTOGRAPHIC HASHES,</h3>
+                                <h3 className="font-bold text-lg mb-1">MESSAGE DIGESTS AND</h3>
+                                <h3 className="font-bold text-lg">DIGITAL CERTIFICATES</h3>
+                            </div>
+                        </div>
+
+                        {/* Course Card 2 */}
+                        <div className="relative bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl p-6 text-white overflow-hidden">
+                            <div className="absolute top-2 left-2">
+                                <div className="flex items-center gap-1 px-2 py-1 bg-black/20 rounded text-xs">
+                                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                                    <span>Private</span>
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <div className="text-xs mb-2 opacity-80">Data Analytics and Visualization (DAV)</div>
+                                <div className="text-xs mb-4 opacity-80">CSC601</div>
+                                <h3 className="font-semibold text-sm mb-1">Subject Incharge</h3>
+                                <p className="text-xs opacity-80">Mrs. Aditi Malkar</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>
-    )
+    );
 }
