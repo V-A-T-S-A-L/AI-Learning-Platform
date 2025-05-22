@@ -1,12 +1,93 @@
+'use client';
+
 import type React from "react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ThemeToggle } from "@/components/theme-toggle"
+import {
+  signInWithEmail,
+  signInWithGoogle,
+  signInWithFacebook,
+  signInWithGithub,
+  resetPassword
+} from "@/lib/auth"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const router = useRouter();
+  const { user } = useAuth();
+
+  // Redirect if already logged in
+  if (user) {
+    router.push('/dashboard'); // Adjust the redirect path as needed
+  }
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const { user, error } = await signInWithEmail(email, password);
+
+    if (error) {
+      setError(error);
+    } else if (user) {
+      router.push('/dashboard'); // Adjust the redirect path as needed
+    }
+
+    setLoading(false);
+  };
+
+  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'github') => {
+    setLoading(true);
+    setError("");
+
+    let result;
+    switch (provider) {
+      case 'google':
+        result = await signInWithGoogle();
+        break;
+      case 'facebook':
+        result = await signInWithFacebook();
+        break;
+      case 'github':
+        result = await signInWithGithub();
+        break;
+    }
+
+    if (result.error) {
+      setError(result.error);
+    } else if (result.user) {
+      router.push('/dashboard'); // Adjust the redirect path as needed
+    }
+
+    setLoading(false);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Please enter your email address first");
+      return;
+    }
+
+    const { error } = await resetPassword(email);
+    if (error) {
+      setError(error);
+    } else {
+      setResetEmailSent(true);
+    }
+  };
+
   return (
     <div className={cn("w-full", className)} {...props}>
       <Card className="w-full shadow-lg border border-purple-500">
@@ -18,7 +99,19 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
           <CardDescription className="text-base">Sign in to continue</CardDescription>
         </CardHeader>
         <CardContent className="px-6 sm:px-8 md:px-12 pb-12">
-          <form>
+          {error && (
+            <div className="mb-4 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+              {error}
+            </div>
+          )}
+
+          {resetEmailSent && (
+            <div className="mb-4 p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+              Password reset email sent! Check your inbox.
+            </div>
+          )}
+
+          <form onSubmit={handleEmailLogin}>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Left column - Email/Password Login */}
               <div className="grid gap-6">
@@ -30,7 +123,10 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                     id="email"
                     type="email"
                     placeholder="m@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={loading}
                     className="h-11 border border-purple-500 focus:border-purple-400 focus:ring-purple-300 focus:ring-2"
                   />
                 </div>
@@ -39,26 +135,36 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                     <Label htmlFor="password" className="text-base">
                       Password
                     </Label>
-                    <a href="#" className="ml-auto text-sm underline-offset-4 hover:underline">
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="ml-auto text-sm underline-offset-4 hover:underline"
+                      disabled={loading}
+                    >
                       Forgot password?
-                    </a>
+                    </button>
                   </div>
                   <Input
                     id="password"
                     type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={loading}
                     className="h-11 border border-purple-500 focus:border-purple-400 focus:ring-purple-300 focus:ring-2"
                   />
                 </div>
                 <Button
                   type="submit"
-                  className="w-full h-11 text-base border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors"
+                  variant="outline"
+                  disabled={loading}
+                  className="w-full h-11 text-base border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors disabled:opacity-50"
                 >
-                  Login
+                  {loading ? "Signing in..." : "Login"}
                 </Button>
                 <div className="text-center text-sm">
                   Don&apos;t have an account?{" "}
-                  <a href="#" className="underline underline-offset-4">
+                  <a href="/signup" className="underline underline-offset-4">
                     Sign up
                   </a>
                 </div>
@@ -72,8 +178,11 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                 <div className="flex flex-col gap-4">
                   {/* Facebook */}
                   <Button
+                    type="button"
                     variant="outline"
-                    className="w-full h-11 border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors"
+                    onClick={() => handleSocialLogin('facebook')}
+                    disabled={loading}
+                    className="w-full h-11 border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors disabled:opacity-50"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
                       <path
@@ -86,8 +195,11 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
                   {/* Google */}
                   <Button
+                    type="button"
                     variant="outline"
-                    className="w-full h-11 border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors"
+                    onClick={() => handleSocialLogin('google')}
+                    disabled={loading}
+                    className="w-full h-11 border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors disabled:opacity-50"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
                       <path
@@ -100,8 +212,11 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
                   {/* GitHub */}
                   <Button
+                    type="button"
                     variant="outline"
-                    className="w-full h-11 border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors"
+                    onClick={() => handleSocialLogin('github')}
+                    disabled={loading}
+                    className="w-full h-11 border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors disabled:opacity-50"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
                       <path
@@ -112,10 +227,12 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                     GitHub
                   </Button>
 
-                  {/* LinkedIn */}
+                  {/* LinkedIn - Note: LinkedIn OAuth requires special setup */}
                   <Button
+                    type="button"
                     variant="outline"
-                    className="w-full h-11 border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors"
+                    disabled={true} // Disabled as LinkedIn requires special OAuth setup
+                    className="w-full h-11 border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors disabled:opacity-50"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
                       <path
@@ -123,7 +240,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                         fill="currentColor"
                       />
                     </svg>
-                    LinkedIn
+                    LinkedIn (Coming Soon)
                   </Button>
                 </div>
               </div>
