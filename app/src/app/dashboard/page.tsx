@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import UploadDocumentDialog from "@/components/upload-document-dialog"
 import { useEffect, useState } from "react"
 import { useUser } from '@/contexts/UserContext'
+import { supabase } from '@/lib/supabaseClient'
+
 
 // Mock data for previously uploaded documents
 const documents = [
@@ -83,6 +85,21 @@ export default function HomePage() {
         </div>
     )
 
+    if (!user) {
+        router.push("/login");
+    }
+
+    const logout = async () => {
+        const { error } = await supabase.auth.signOut()
+        if (error) {
+            console.error('Logout error:', error.message)
+        } else {
+            console.log('User logged out successfully')
+            // Optional: redirect to login or homepage
+            window.location.href = '/login'  // or '/'
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-t from-black via-[#000] to-[#340258] text-white">
             {/* Header */}
@@ -100,7 +117,7 @@ export default function HomePage() {
                     <button className="px-4 py-2 border border-green-500 text-green-500 rounded-lg hover:bg-green-500 hover:text-black transition-colors">
                         Upgrade
                     </button>
-                    <button className="cursor-pointer px-4 py-2 border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-500 hover:text-black transition-colors">
+                    <button onClick={logout} className="cursor-pointer px-4 py-2 border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-500 hover:text-black transition-colors">
                         Logout
                     </button>
                 </div>
@@ -119,7 +136,7 @@ export default function HomePage() {
 
                 {/* Main Heading */}
                 <h1 className="text-4xl md:text-5xl font-bold text-center mb-12">
-                    {greeting} {user?.email}! 👋
+                    {greeting} {user?.user_metadata.full_name}! 👋
                 </h1>
                 <h1 className="text-4xl text-center mb-12">
                     What do you want to learn today?
