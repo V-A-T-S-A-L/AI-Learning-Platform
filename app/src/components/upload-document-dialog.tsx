@@ -31,32 +31,54 @@ export default function UploadDocumentDialog({ children }: { children: React.Rea
 	}
 
 	const handleUpload = async () => {
-		if (!file) return
+		if (!file) return;
 
-		setUploading(true)
+		setUploading(true);
 
-		const fileExt = file.name.split('.').pop()
-		const filePath = `${Date.now()}-${file.name}`
+		const user = await supabase.auth.getUser();
+		const userId = user.data.user?.id;
 
-		const { data, error } = await supabase.storage
-			.from("files") // <-- replace with your bucket name
-			.upload(`uploads/${filePath}`, file, {
-				cacheControl: "3600",
-				upsert: false
-			})
-
-		if (error) {
-			console.error("Upload error:", error.message)
-			alert("Failed to upload file.")
-		} else {
-			console.log("Upload success:", data)
-			alert("File uploaded successfully!")
+		if (!userId) {
+			alert("User not authenticated.");
+			setUploading(false);
+			return;
 		}
 
-		setUploading(false)
-		setFile(null)
-		setOpen(false)
-	}
+		const fileExt = file.name.split('.').pop();
+		const filePath = `uploads/${Date.now()}-${file.name}`;
+
+		const { data, error } = await supabase.storage
+			.from("files")
+			.upload(filePath, file, {
+				cacheControl: "3600",
+				upsert: false
+			});
+
+		if (error) {
+			console.error("Upload error:", error.message);
+			alert("Failed to upload file.");
+		} else {
+			// Insert file metadata to user_files table
+			const { error: insertError } = await supabase.from("user_files").insert({
+				user_id: userId,
+				file_name: file.name,
+				file_path: filePath
+			});
+
+			if (insertError) {
+				console.error("DB insert error:", insertError.message);
+				alert("File uploaded, but failed to save metadata.");
+			} else {
+				console.log("Upload and DB insert success");
+				alert("File uploaded successfully!");
+			}
+		}
+
+		setUploading(false);
+		setFile(null);
+		setOpen(false);
+	};
+
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>{children}</DialogTrigger>
