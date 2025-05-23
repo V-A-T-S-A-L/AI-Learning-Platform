@@ -53,30 +53,33 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
 	const handleSocialLogin = async (provider: 'google' | 'facebook' | 'github') => {
 		setLoading(true)
-		const { error } = await supabase.auth.signInWithOAuth({ provider })
+		const { error } = await supabase.auth.signInWithOAuth({
+		provider,
+		options: {
+			redirectTo: `${window.location.origin}/dashboard`, // 👈 Add this
+		},
+	})
 		if (error) setError(error.message)
 		setLoading(false)
 	}
 
 	return (
 		<div className={cn("w-full", className)} {...props}>
-			<Card className="w-full shadow-lg border border-purple-500">
-				<CardHeader className="text-center relative pb-8">
-					<div className="absolute right-4 top-4">
-						<ThemeToggle />
-					</div>
+			<Card className="w-full shadow-lg border border-[#a855f7] bg-gradient-to-br from-[#160020] to-[#1a0029] text-white">
+				
+				<CardHeader className="text-center relative pb-8 text-white">
 					<CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
 					<CardDescription className="text-base">Sign in to continue</CardDescription>
 				</CardHeader>
 				<CardContent className="px-6 sm:px-8 md:px-12 pb-12">
 					{error && (
-						<div className="mb-4 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+						<div className="mb-4 p-3 text-sm text-red-300 bg-red-950 border border-red-800 rounded-md">
 							{error}
 						</div>
 					)}
 
 					{resetEmailSent && (
-						<div className="mb-4 p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+						<div className="mb-4 p-3 text-sm text-green-300 bg-green-950 border border-green-800 rounded-md">
 							Password reset email sent! Check your inbox.
 						</div>
 					)}
@@ -97,7 +100,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 										onChange={(e) => setEmail(e.target.value)}
 										required
 										disabled={loading}
-										className="h-11 border border-purple-500 focus:border-purple-400 focus:ring-purple-300 focus:ring-2"
+										className="h-11 border border-[#a855f7] bg-transparent text-white placeholder:text-purple-300 focus:border-[#00ff9f] focus:ring-[#00ff9f]/40 focus:ring-2"
 									/>
 								</div>
 								<div className="grid gap-2">
@@ -121,14 +124,15 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 										onChange={(e) => setPassword(e.target.value)}
 										required
 										disabled={loading}
-										className="h-11 border border-purple-500 focus:border-purple-400 focus:ring-purple-300 focus:ring-2"
+										className="h-11 border border-[#a855f7] bg-transparent text-white placeholder:text-purple-300 focus:border-[#00ff9f] focus:ring-[#00ff9f]/40 focus:ring-2"
 									/>
 								</div>
 								<Button
 									type="submit"
 									variant="outline"
 									disabled={loading}
-									className="w-full h-11 text-base border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors disabled:opacity-50"
+									className="w-full h-11 text-base bg-[#00ff9f] text-black font-semibold hover:bg-[#00e68a] border-none transition-colors disabled:opacity-50"
+
 								>
 									{loading ? "Signing in..." : "Login"}
 								</Button>
@@ -143,7 +147,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 							{/* Right column - Social Logins */}
 							<div className="grid gap-6">
 								<div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-									<span className="relative z-10 bg-background px-2 text-muted-foreground">Or login with</span>
+									<span className="relative z-10 bg-[#1a0029] px-2 text-white">Or login with</span>
 								</div>
 								<div className="flex flex-col gap-4">
 									{/* Facebook */}
@@ -152,7 +156,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 										variant="outline"
 										onClick={() => handleSocialLogin('facebook')}
 										disabled={loading}
-										className="w-full h-11 border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors disabled:opacity-50"
+										className="w-full h-11 text-base border border-[#a855f7] text-white bg-transparent hover:bg-[#a855f7]/20 hover:text-white transition-colors disabled:opacity-50"
+
 									>
 										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
 											<path
@@ -169,7 +174,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 										variant="outline"
 										onClick={() => handleSocialLogin('google')}
 										disabled={loading}
-										className="w-full h-11 border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors disabled:opacity-50"
+										className="w-full h-11 text-base border border-[#a855f7] text-white bg-transparent hover:bg-[#a855f7]/20 hover:text-white transition-colors disabled:opacity-50"
+
 									>
 										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
 											<path
@@ -186,7 +192,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 										variant="outline"
 										onClick={() => handleSocialLogin('github')}
 										disabled={loading}
-										className="w-full h-11 border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors disabled:opacity-50"
+										className="w-full h-11 text-base border border-[#a855f7] text-white bg-transparent hover:bg-[#a855f7]/20 hover:text-white transition-colors disabled:opacity-50"
+
 									>
 										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
 											<path
@@ -201,8 +208,9 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 									<Button
 										type="button"
 										variant="outline"
-										disabled={true} // Disabled as LinkedIn requires special OAuth setup
-										className="w-full h-11 border border-purple-500 hover:bg-purple-50 hover:text-purple-700 transition-colors disabled:opacity-50"
+										disabled={loading} // Disabled as LinkedIn requires special OAuth setup
+										className="w-full h-11 text-base border border-[#a855f7] text-white bg-transparent hover:bg-[#a855f7]/20 hover:text-white transition-colors disabled:opacity-50"
+
 									>
 										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
 											<path
@@ -210,7 +218,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 												fill="currentColor"
 											/>
 										</svg>
-										LinkedIn (Coming Soon)
+										LinkedIn
 									</Button>
 								</div>
 							</div>
