@@ -10,6 +10,7 @@ import UploadDocumentDialog from "@/components/upload-document-dialog"
 import { useEffect, useState } from "react"
 import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabaseClient'
+import ContinueLearningSection from "@/components/ContinueLearningSection";
 
 
 // Mock data for previously uploaded documents
@@ -187,47 +188,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Continue Learning Section */}
-                <div>
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-semibold">Continue learning</h2>
-                        <button className="text-sm text-gray-400 hover:text-white transition-colors">
-                            View all
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Course Card 1 */}
-                        <div className="relative bg-gradient-to-br from-orange-500 to-red-500 rounded-xl p-6 text-white overflow-hidden">
-                            <div className="absolute top-2 left-2">
-                                <div className="flex items-center gap-1 px-2 py-1 bg-black/20 rounded text-xs">
-                                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                                    <span>Private</span>
-                                </div>
-                            </div>
-                            <div className="mt-8">
-                                <h3 className="font-bold text-lg mb-1">CRYPTOGRAPHIC HASHES,</h3>
-                                <h3 className="font-bold text-lg mb-1">MESSAGE DIGESTS AND</h3>
-                                <h3 className="font-bold text-lg">DIGITAL CERTIFICATES</h3>
-                            </div>
-                        </div>
-
-                        {/* Course Card 2 */}
-                        <div className="relative bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl p-6 text-white overflow-hidden">
-                            <div className="absolute top-2 left-2">
-                                <div className="flex items-center gap-1 px-2 py-1 bg-black/20 rounded text-xs">
-                                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                                    <span>Private</span>
-                                </div>
-                            </div>
-                            <div className="mt-4">
-                                <div className="text-xs mb-2 opacity-80">Data Analytics and Visualization (DAV)</div>
-                                <div className="text-xs mb-4 opacity-80">CSC601</div>
-                                <h3 className="font-semibold text-sm mb-1">Subject Incharge</h3>
-                                <p className="text-xs opacity-80">Mrs. Aditi Malkar</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <ContinueLearningSection />                
             </main>
         </div>
     );
