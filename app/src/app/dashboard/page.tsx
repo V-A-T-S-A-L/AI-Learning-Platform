@@ -7,10 +7,8 @@ import { Upload, Link, Mic, ArrowUp, Plus, Trash2, Menu, Sparkles } from 'lucide
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import UploadDocumentDialog from "@/components/upload-document-dialog"
-import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from "react"
-import { User, onAuthStateChanged, signOut } from "firebase/auth"
-import { auth } from "@/lib/firebase"
+import { useUser } from '@/contexts/UserContext'
 
 // Mock data for previously uploaded documents
 const documents = [
@@ -61,33 +59,10 @@ const userStats = {
 }
 
 export default function HomePage() {
-    //const { user } = useAuth();
-    //console.warn(user);
+
     const router = useRouter();
 
-    // Redirect if not authenticated
-    // useEffect(() => {
-    //     if (!user) {
-    //         router.push('/login');
-    //     }
-    // }, [user, router]);
-
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-            if (firebaseUser) {
-                setUser(firebaseUser);
-                console.warn(user);
-                setLoading(false);
-            } else {
-                router.push("/login");
-            }
-        });
-
-        return () => unsubscribe();
-    }, []);
+    const { user, loading } = useUser()
 
     const [greeting, setGreeting] = useState("Good morning")
 
@@ -125,7 +100,7 @@ export default function HomePage() {
                     <button className="px-4 py-2 border border-green-500 text-green-500 rounded-lg hover:bg-green-500 hover:text-black transition-colors">
                         Upgrade
                     </button>
-                    <button onClick={() => signOut(auth)} className="cursor-pointer px-4 py-2 border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-500 hover:text-black transition-colors">
+                    <button className="cursor-pointer px-4 py-2 border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-500 hover:text-black transition-colors">
                         Logout
                     </button>
                 </div>
@@ -144,7 +119,7 @@ export default function HomePage() {
 
                 {/* Main Heading */}
                 <h1 className="text-4xl md:text-5xl font-bold text-center mb-12">
-                    {greeting} {user?.displayName}! 👋
+                    {greeting} {user?.email}! 👋
                 </h1>
                 <h1 className="text-4xl text-center mb-12">
                     What do you want to learn today?
