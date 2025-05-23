@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { User } from "@supabase/supabase-js"
+import { Trash2, Pencil } from "lucide-react"
 
 interface UserFile {
     id: number
@@ -72,22 +73,24 @@ const ContinueLearningSection: React.FC = () => {
                 {userFiles.map((file) => (
                     <div
                         key={file.id}
-                        className="relative bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl p-6 text-white overflow-hidden"
+                        className="group relative hover:-translate-y-1 hover:shadow-sm shadow-gray-500 duration-200 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl p-6 text-white overflow-hidden"
                     >
-                        <div className="absolute top-2 left-2">
-                            <div className="flex items-center gap-1 px-2 py-1 bg-black/20 rounded text-xs">
-                                <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                                <span>Private</span>
-                            </div>
+                        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                                className="text-gray-400 hover:text-yellow-300 cursor-pointer"
+                                title="Edit"
+                            >
+                                <Pencil className="w-5 h-5"/>
+                            </button>
+                            <button
+                                className="text-gray-400 hover:text-red-500 cursor-pointer"
+                                title="Delete"
+                            >
+                                <Trash2 className="w-5 h-5"/>
+                            </button>
                         </div>
-                        <div className="mt-4">
-                            {file.thumbnail && (
-                                <img
-                                    src={file.thumbnail}
-                                    alt="Preview"
-                                    className="rounded mb-2 w-full"
-                                />
-                            )}
+
+                        <div>
                             <h3 className="font-semibold text-sm truncate mb-1">
                                 {file.file_name}
                             </h3>
@@ -98,6 +101,7 @@ const ContinueLearningSection: React.FC = () => {
                     </div>
                 ))}
             </div>
+
         </div>
     )
 }
