@@ -2,9 +2,6 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Send, Bot, User, Sparkles } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface Document {
   id: string
@@ -85,7 +82,8 @@ export default function ChatView({ document }: { document: Document }) {
 
   return (
     <div className="h-full flex flex-col bg-black">
-      <ScrollArea className="flex-1 p-6">
+      {/* Replace ScrollArea with native div */}
+      <div className="flex-1 p-6 overflow-y-auto">
         <div className="space-y-6">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -143,11 +141,12 @@ export default function ChatView({ document }: { document: Document }) {
           )}
           <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
+      </div>
 
       <div className="p-6 border-t border-zinc-800 bg-zinc-950/50 backdrop-blur-sm">
         <div className="flex space-x-3">
-          <Input
+          {/* Replace Input with native input */}
+          <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -157,15 +156,16 @@ export default function ChatView({ document }: { document: Document }) {
               }
             }}
             placeholder="Ask a question about this document..."
-            className="bg-zinc-900 border-zinc-700 focus-visible:ring-purple-500 rounded-2xl px-6 py-3 text-white placeholder:text-zinc-500"
+            className="flex-1 bg-zinc-900 border border-zinc-700 focus:ring-2 focus:ring-purple-500 focus:outline-none rounded-2xl px-6 py-3 text-white placeholder:text-zinc-500"
           />
-          <Button
+          {/* Replace Button with native button */}
+          <button
             onClick={handleSendMessage}
             disabled={isLoading || !input.trim()}
-            className="bg-purple-600 hover:bg-purple-700 rounded-2xl px-6 py-3 shadow-lg"
+            className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl px-6 py-3 shadow-lg transition-colors"
           >
-            <Send className="h-5 w-5" />
-          </Button>
+            <Send className="h-5 w-5 text-white" />
+          </button>
         </div>
       </div>
     </div>

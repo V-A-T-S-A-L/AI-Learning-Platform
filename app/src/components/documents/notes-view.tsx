@@ -1,9 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Save, FileText } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 
 interface Document {
   id: string
@@ -18,21 +16,13 @@ export default function NotesView({ document }: { document: Document }) {
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
-  // Load saved notes from localStorage on component mount
-  useEffect(() => {
-    const savedNotes = localStorage.getItem(`notes-${document.id}`)
-    if (savedNotes) {
-      setNotes(savedNotes)
-      setLastSaved(new Date())
-    }
-  }, [document.id])
-
   const handleSaveNotes = () => {
     setIsSaving(true)
 
     // Simulate saving delay
     setTimeout(() => {
-      localStorage.setItem(`notes-${document.id}`, notes)
+      // Note: In a real app, you'd save to a database here
+      // localStorage won't work in Claude.ai artifacts
       setLastSaved(new Date())
       setIsSaving(false)
     }, 800)
@@ -56,27 +46,31 @@ export default function NotesView({ document }: { document: Document }) {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-white">Your Notes</h3>
-            <p className="text-sm text-zinc-400">Take notes as you study this document</p>
+            <p className="text-sm text-zinc-400">Take notes as you study "{document.title}"</p>
           </div>
         </div>
         <div className="flex items-center space-x-3">
-          {lastSaved && <span className="text-xs text-zinc-500">Last saved at {formatLastSaved()}</span>}
-          <Button
+          {lastSaved && (
+            <span className="text-xs text-zinc-500">
+              Last saved at {formatLastSaved()}
+            </span>
+          )}
+          <button
             onClick={handleSaveNotes}
             disabled={isSaving}
-            className="bg-purple-600 hover:bg-purple-700 rounded-2xl px-6 py-2 shadow-lg"
+            className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl px-6 py-2 shadow-lg transition-colors text-white flex items-center"
           >
             <Save className="h-4 w-4 mr-2" />
             {isSaving ? "Saving..." : "Save"}
-          </Button>
+          </button>
         </div>
       </div>
 
-      <Textarea
+      <textarea
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         placeholder="Start typing your notes here..."
-        className="flex-1 resize-none bg-zinc-950 border-zinc-800 focus-visible:ring-purple-500 text-white placeholder:text-zinc-500 rounded-2xl p-6 text-base leading-relaxed"
+        className="flex-1 resize-none bg-zinc-950 border border-zinc-800 focus:ring-2 focus:ring-purple-500 focus:outline-none text-white placeholder:text-zinc-500 rounded-2xl p-6 text-base leading-relaxed"
       />
     </div>
   )
