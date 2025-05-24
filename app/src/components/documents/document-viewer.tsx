@@ -1,194 +1,162 @@
 "use client"
 
-import { useState } from "react"
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize, Minimize, Download, MoreHorizontal } from "lucide-react"
+import { useState, useEffect } from "react"
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize, Minimize, Download, MoreHorizontal, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { supabase } from "@/lib/supabaseClient"
+import Link from "next/link"
 
 interface Document {
-  id: string
-  title: string
-  type: string
-  url: string
-  pages: number
+	uuid: string
+	user_id: string
+	file_name: string
+	file_path: string
+	created_at: string
+	pages?: number
+	type?: string
 }
 
 export default function DocumentViewer({ document }: { document: Document }) {
-  const [currentPage, setCurrentPage] = useState(1)
-  const [zoom, setZoom] = useState(100)
-  const [isFullscreen, setIsFullscreen] = useState(false)
+	const [currentPage, setCurrentPage] = useState(1)
+	const [totalPages, setTotalPages] = useState(document?.pages || 1)
+	const [zoom, setZoom] = useState(100)
+	const [isFullscreen, setIsFullscreen] = useState(false)
+	const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+	const [isLoading, setIsLoading] = useState(true)
+	const [error, setError] = useState<string | null>(null)
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
-    }
-  }
+	useEffect(() => {
+		if (!document) return
 
-  const handleNextPage = () => {
-    if (currentPage < document.pages) {
-      setCurrentPage(currentPage + 1)
-    }
-  }
+		const fetchPDF = async () => {
+			try {
+				setIsLoading(true)
+				setError(null)
 
-  const handleZoomIn = () => {
-    if (zoom < 200) {
-      setZoom(zoom + 10)
-    }
-  }
+				// First, try to get a signed URL for private files
+				const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+					.from('files')
+					.createSignedUrl(document.file_path, 3600) // 1 hour expiry
 
-  const handleZoomOut = () => {
-    if (zoom > 50) {
-      setZoom(zoom - 10)
-    }
-  }
+				if (signedUrlData?.signedUrl && !signedUrlError) {
+					// Use signed URL for private files
+					setPdfUrl(signedUrlData.signedUrl)
+				} else {
+					// If signed URL fails, try public URL
+					const { data: urlData } = supabase.storage
+						.from('files')
+						.getPublicUrl(document.file_path)
 
-  const toggleFullscreen = () => {
-    const viewerElement = document.getElementById("document-viewer")
+					if (urlData?.publicUrl) {
+						// Test if the public URL actually works
+						try {
+							const response = await fetch(urlData.publicUrl, { method: 'HEAD' })
+							if (response.ok) {
+								setPdfUrl(urlData.publicUrl)
+							} else {
+								throw new Error(`File not accessible: ${response.status}`)
+							}
+						} catch (fetchError) {
+							console.error('Public URL test failed:', fetchError)
+							throw new Error('File not accessible via public URL')
+						}
+					} else {
+						throw new Error('Could not generate file URL')
+					}
+				}
 
-    if (!isFullscreen) {
-      if (viewerElement?.requestFullscreen) {
-        viewerElement.requestFullscreen()
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen()
-      }
-    }
+				if (signedUrlError) {
+					console.error('Signed URL error:', signedUrlError)
+					// Don't throw here if we're trying public URL as fallback
+				}
 
-    setIsFullscreen(!isFullscreen)
-  }
+			} catch (err) {
+				console.error('Error fetching PDF:', err)
+				setError(err instanceof Error ? err.message : 'Failed to load document')
+			} finally {
+				setIsLoading(false)
+			}
+		}
 
-  return (
-    <div className="flex flex-col h-full bg-black border-r border-zinc-800">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-sm">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-semibold text-white truncate">{document.title}</h1>
-          <p className="text-sm text-zinc-400 mt-1">
-            {document.type} • {document.pages} pages
-          </p>
-        </div>
+		fetchPDF()
 
-        <div className="flex items-center space-x-2 ml-4">
-          <div className="flex items-center bg-zinc-900 rounded-xl p-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleZoomOut}
-                    disabled={zoom <= 50}
-                    className="h-8 w-8 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"
-                  >
-                    <ZoomOut className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Zoom Out</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+		// Cleanup signed URLs when component unmounts (blob URLs are no longer created)
+		return () => {
+			// No cleanup needed for public/signed URLs
+		}
+	}, [document])
 
-            <div className="px-3 py-1 text-sm text-zinc-300 font-medium min-w-[60px] text-center">{zoom}%</div>
+	if (!document) {
+		return (
+			<div className="flex items-center justify-center h-screen bg-black">
+				<div className="text-center">
+					<div className="w-16 h-16 border-4 border-t-transparent border-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+					<p className="text-zinc-400">Loading document...</p>
+				</div>
+			</div>
+		)
+	}
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleZoomIn}
-                    disabled={zoom >= 200}
-                    className="h-8 w-8 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"
-                  >
-                    <ZoomIn className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Zoom In</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+	return (
+		<div className="flex flex-col h-full bg-black border-r border-zinc-800">
+			{/* Header */}
+			<div className="flex items-center justify-between p-6 border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-sm">
+				<Link href={"/dashboard"}>
+					<ChevronLeft className="text-white mr-4"/>
+				</Link>
+				<div className="flex-1 min-w-0">
+					<h1 className="text-xl font-semibold text-white truncate">{document.file_name}</h1>
+				</div>
+			</div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 w-9 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-zinc-900 border-zinc-800 rounded-xl">
-              <DropdownMenuItem onClick={toggleFullscreen} className="rounded-lg">
-                {isFullscreen ? <Minimize className="h-4 w-4 mr-2" /> : <Maximize className="h-4 w-4 mr-2" />}
-                {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-              </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-lg">
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* Document Display */}
-      <div id="document-viewer" className="flex-1 overflow-auto bg-zinc-950 flex items-center justify-center p-6">
-        <div className="relative">
-          <div
-            style={{
-              transform: `scale(${zoom / 100})`,
-              transformOrigin: "center center",
-              transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            }}
-            className="relative bg-white shadow-2xl rounded-2xl overflow-hidden"
-          >
-            <img
-              src={document.url || "/placeholder.svg"}
-              alt={`Page ${currentPage} of ${document.title}`}
-              className="max-w-full h-auto block"
-            />
-            <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-sm text-white text-xs px-3 py-2 rounded-full">
-              Page {currentPage} of {document.pages}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation Controls */}
-      <div className="flex items-center justify-center p-6 border-t border-zinc-800 bg-zinc-950/50 backdrop-blur-sm">
-        <div className="flex items-center bg-zinc-900 rounded-2xl p-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            className="h-10 w-10 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-30"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-
-          <div className="px-6 py-2 text-sm text-zinc-300 font-medium">
-            <span className="text-white font-semibold">{currentPage}</span>
-            <span className="text-zinc-500"> / {document.pages}</span>
-          </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleNextPage}
-            disabled={currentPage === document.pages}
-            className="h-10 w-10 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-30"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
+			{/* Document Display */}
+			<div id="document-viewer" className="flex-1 overflow-auto bg-zinc-950 flex items-center justify-center p-6">
+				{isLoading ? (
+					<div className="text-center">
+						<Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
+						<p className="text-zinc-400">Loading PDF...</p>
+					</div>
+				) : error ? (
+					<div className="text-center">
+						<div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+							<span className="text-red-400 text-2xl">⚠</span>
+						</div>
+						<p className="text-red-400 mb-2">Failed to load document</p>
+						<p className="text-zinc-500 text-sm">{error}</p>
+					</div>
+				) : pdfUrl ? (
+					<div className="relative w-full h-full">
+						<div
+							style={{
+								transform: `scale(${zoom / 100})`,
+								transformOrigin: "center center",
+								transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+							}}
+							className="relative bg-white shadow-2xl rounded-2xl overflow-hidden w-full h-full"
+						>
+							{/* PDF Embed */}
+							<iframe
+								src={`${pdfUrl}#page=${currentPage}&zoom=${zoom}`}
+								className="w-full h-full border-0"
+								title={`${document.file_name} - Page ${currentPage}`}
+								onLoad={() => {
+									// Try to extract page count from PDF if possible
+									// This is limited in iframe mode, but we can try
+								}}
+							/>
+						</div>
+					</div>
+				) : (
+					<div className="text-center">
+						<div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+							<span className="text-zinc-400 text-2xl">📄</span>
+						</div>
+						<p className="text-zinc-400">No document to display</p>
+					</div>
+				)}
+			</div>			
+		</div>
+	)
 }

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { User } from "@supabase/supabase-js"
-import { Trash2, Pencil } from "lucide-react"
+import { Trash2, Pencil, ExternalLink } from "lucide-react"
+import Link from "next/link"
 
 interface UserFile {
     id: number
     user_id: string
     file_name: string
+    file_path: string
     created_at: string
     publicUrl?: string
     thumbnail?: string
@@ -80,14 +82,22 @@ const ContinueLearningSection: React.FC = () => {
                                 className="text-gray-400 hover:text-yellow-300 cursor-pointer"
                                 title="Edit"
                             >
-                                <Pencil className="w-5 h-5"/>
+                                <Pencil className="w-5 h-5" />
                             </button>
                             <button
                                 className="text-gray-400 hover:text-red-500 cursor-pointer"
                                 title="Delete"
                             >
-                                <Trash2 className="w-5 h-5"/>
+                                <Trash2 className="w-5 h-5" />
                             </button>
+                            <Link href={`documents/${file.id}`}>
+                                <button
+                                    className="text-gray-400 hover:text-green-500 cursor-pointer"
+                                    title="Delete"
+                                >
+                                    <ExternalLink className="w-5 h-5" />
+                                </button>
+                            </Link>
                         </div>
 
                         <div>
