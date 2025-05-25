@@ -39,8 +39,7 @@ export default function StudyTabs({
 		<div className="h-full flex flex-col bg-black">
 			{/* Fixed Header */}
 			<div className="flex-shrink-0 p-6 border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-sm">
-				<h2 className="text-xl font-semibold text-white">Study Materials</h2>
-				<p className="text-sm text-zinc-400 mt-1">Review and learn from this document</p>
+				<p className="text-sm text-zinc-400 mt-2">Review and learn from this document</p>
 			</div>
 
 			{/* Tabs Container - fills remaining height */}

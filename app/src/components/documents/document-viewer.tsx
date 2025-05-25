@@ -22,7 +22,6 @@ export default function DocumentViewer({ document }: { document: Document }) {
 	const [currentPage, setCurrentPage] = useState(1)
 	const [totalPages, setTotalPages] = useState(document?.pages || 1)
 	const [zoom, setZoom] = useState(100)
-	const [isFullscreen, setIsFullscreen] = useState(false)
 	const [pdfUrl, setPdfUrl] = useState<string | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
@@ -100,7 +99,7 @@ export default function DocumentViewer({ document }: { document: Document }) {
 	}
 
 	return (
-		<div className="flex flex-col h-full bg-black border-r border-zinc-800">
+		<div className="flex flex-col h-full bg-black ">
 			{/* Header */}
 			<div className="flex items-center justify-between p-6 border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-sm">
 				<Link href={"/dashboard"}>
@@ -112,7 +111,7 @@ export default function DocumentViewer({ document }: { document: Document }) {
 			</div>
 
 			{/* Document Display */}
-			<div id="document-viewer" className="flex-1 overflow-auto bg-zinc-950 flex items-center justify-center p-6">
+			<div id="document-viewer" className="border-r border-zinc-800 flex-1 overflow-auto bg-zinc-950 flex items-center justify-center p-6">
 				{isLoading ? (
 					<div className="text-center">
 						<Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
