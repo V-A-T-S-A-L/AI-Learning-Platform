@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { ChevronLeft, ChevronRight, Check, X, RotateCcw, Shuffle } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
+import { ChevronLeft, ChevronRight, Check, X, RotateCcw, Shuffle, ArrowUpDown, Funnel, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { useParams } from "next/navigation"
 import { usePDF } from "@/contexts/pdf-context"
 
@@ -17,6 +18,9 @@ interface Flashcard {
 	page_no: string
 }
 
+type SortOption = 'difficulty-asc' | 'difficulty-desc' | 'page-asc' | 'page-desc' | 'none'
+type FilterOption = 'all' | 'easy' | 'medium' | 'hard'
+
 export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] }) {
 
 	const params = useParams();
@@ -24,24 +28,66 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 
 	const [currentIndex, setCurrentIndex] = useState<number>(0)
 	const [flipped, setFlipped] = useState(false)
-
-	const currentCard = flashcards[currentIndex]
-	const progress = Math.round(((currentIndex + 1) / flashcards.length) * 100)
+	const [sortOption, setSortOption] = useState<SortOption>('none')
+	const [filterOption, setFilterOption] = useState<FilterOption>('all')
 
 	const { setCurrentPage } = usePDF();
 
-	const handlePageClick = (pageNumber: number) => {
-		setCurrentPage(pageNumber);
+	// Filter and sort flashcards
+	const processedFlashcards = useMemo(() => {
+		let filtered = [...flashcards]
+
+		// Apply filter
+		if (filterOption !== 'all') {
+			filtered = filtered.filter(card => card.difficulty.toLowerCase() === filterOption)
+		}
+
+		// Apply sort
+		if (sortOption !== 'none') {
+			filtered.sort((a, b) => {
+				switch (sortOption) {
+					case 'difficulty-asc':
+						const difficultyOrder = { 'easy': 1, 'medium': 2, 'hard': 3 }
+						return (difficultyOrder[a.difficulty.toLowerCase() as keyof typeof difficultyOrder] || 0) -
+							(difficultyOrder[b.difficulty.toLowerCase() as keyof typeof difficultyOrder] || 0)
+					case 'difficulty-desc':
+						const difficultyOrderDesc = { 'hard': 1, 'medium': 2, 'easy': 3 }
+						return (difficultyOrderDesc[a.difficulty.toLowerCase() as keyof typeof difficultyOrderDesc] || 0) -
+							(difficultyOrderDesc[b.difficulty.toLowerCase() as keyof typeof difficultyOrderDesc] || 0)
+					case 'page-asc':
+						return parseInt(a.page_no) - parseInt(b.page_no)
+					case 'page-desc':
+						return parseInt(b.page_no) - parseInt(a.page_no)
+					default:
+						return 0
+				}
+			})
+		}
+
+		return filtered
+	}, [flashcards, sortOption, filterOption])
+
+	const currentCard = processedFlashcards[currentIndex]
+	const progress = processedFlashcards.length > 0 ? Math.round(((currentIndex + 1) / processedFlashcards.length) * 100) : 0
+
+	// Reset current index when filters/sorts change
+	useEffect(() => {
+		setCurrentIndex(0)
+		setFlipped(false)
+	}, [sortOption, filterOption])
+
+	const handlePageClick = (pageNumber: string) => {
+		setCurrentPage(parseInt(pageNumber));
 	};
 
 	const handlePrevCard = () => {
 		setFlipped(false)
-		setCurrentIndex((prev) => (prev === 0 ? flashcards.length - 1 : prev - 1))
+		setCurrentIndex((prev) => (prev === 0 ? processedFlashcards.length - 1 : prev - 1))
 	}
 
 	const handleNextCard = () => {
 		setFlipped(false)
-		setCurrentIndex((prev) => (prev === flashcards.length - 1 ? 0 : prev + 1))
+		setCurrentIndex((prev) => (prev === processedFlashcards.length - 1 ? 0 : prev + 1))
 	}
 
 	const toggleFlip = () => {
@@ -53,8 +99,16 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 		setFlipped(false)
 	}
 
+	const shuffleCards = () => {
+		// This would require a more complex implementation to truly shuffle
+		// For now, we'll just reset and change sort to none
+		setSortOption('none')
+		setCurrentIndex(0)
+		setFlipped(false)
+	}
+
 	const getDifficultyColor = (difficulty: string) => {
-		switch (difficulty) {
+		switch (difficulty.toLowerCase()) {
 			case "easy":
 				return "bg-emerald-600 hover:bg-emerald-700 text-white"
 			case "medium":
@@ -63,6 +117,26 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 				return "bg-red-600 hover:bg-red-700 text-white"
 			default:
 				return "bg-zinc-600 hover:bg-zinc-700 text-white"
+		}
+	}
+
+	const getSortLabel = (option: SortOption) => {
+		switch (option) {
+			case 'difficulty-asc': return 'Difficulty (Easy → Hard)'
+			case 'difficulty-desc': return 'Difficulty (Hard → Easy)'
+			case 'page-asc': return 'Page Number (Low → High)'
+			case 'page-desc': return 'Page Number (High → Low)'
+			default: return 'None'
+		}
+	}
+
+	const getFilterLabel = (option: FilterOption) => {
+		switch (option) {
+			case 'all': return 'All Cards'
+			case 'easy': return 'Easy Cards'
+			case 'medium': return 'Medium Cards'
+			case 'hard': return 'Hard Cards'
+			default: return 'All Cards'
 		}
 	}
 
@@ -80,8 +154,83 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 
 		window.addEventListener('keydown', handleKeyDown)
 		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [currentIndex, flipped]) // dependencies
+	}, [currentIndex, flipped, processedFlashcards.length])
 
+	// Show message if no cards match the filter
+	if (processedFlashcards.length === 0) {
+		return (
+			<div className="h-full flex flex-col bg-black p-6">
+				<div className="flex items-center justify-between mb-8">
+					<div className="flex-1">
+						<h3 className="text-lg font-semibold text-white mb-2">Study Progress</h3>
+						<div className="flex items-center space-x-4">
+							<Progress value={0} className="flex-1 h-2 bg-zinc-900 rounded-full" />
+							<span className="text-sm text-zinc-400 font-medium min-w-[80px]">
+								0 / {flashcards.length} cards
+							</span>
+						</div>
+					</div>
+					<div className="flex items-center space-x-2 ml-6">
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="ghost"
+									size="sm"
+									className="rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800"
+								>
+									<Funnel className="h-4 w-4 mr-2" />
+									{getFilterLabel(filterOption)}
+									<ChevronDown className="h-4 w-4 ml-1" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent className="bg-zinc-900 border-zinc-700">
+								<DropdownMenuItem
+									onClick={() => setFilterOption('all')}
+									className="text-zinc-300 hover:bg-zinc-800 hover:text-white"
+								>
+									All Cards ({flashcards.length})
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onClick={() => setFilterOption('easy')}
+									className="text-zinc-300 hover:bg-zinc-800 hover:text-white"
+								>
+									Easy ({flashcards.filter(c => c.difficulty.toLowerCase() === 'easy').length})
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onClick={() => setFilterOption('medium')}
+									className="text-zinc-300 hover:bg-zinc-800 hover:text-white"
+								>
+									Medium ({flashcards.filter(c => c.difficulty.toLowerCase() === 'medium').length})
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onClick={() => setFilterOption('hard')}
+									className="text-zinc-300 hover:bg-zinc-800 hover:text-white"
+								>
+									Hard ({flashcards.filter(c => c.difficulty.toLowerCase() === 'hard').length})
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
+				</div>
+
+				<div className="flex-1 flex items-center justify-center">
+					<div className="text-center">
+						<div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+							<Funnel className="h-8 w-8 text-zinc-400" />
+						</div>
+						<h3 className="text-xl font-semibold text-white mb-2">No cards match your filter</h3>
+						<p className="text-zinc-400 mb-4">Try selecting a different filter or clear all filters to see all cards.</p>
+						<Button
+							onClick={() => setFilterOption('all')}
+							className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
+						>
+							Show All Cards
+						</Button>
+					</div>
+				</div>
+			</div>
+		)
+	}
 
 	return (
 		<div className="h-full flex flex-col bg-black p-6">
@@ -90,16 +239,30 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 				<div className="flex-1">
 					<div className="flex items-center">
 						<h3 className="text-lg font-semibold text-white mb-2">Study Progress</h3>
-						{currentIndex + 1 == flashcards.length && (
+						{currentIndex + 1 === processedFlashcards.length && (
 							<p className="text-sm font-semibold ml-3 text-green-300 mb-2">Completed!!</p>
 						)}
 					</div>
 					<div className="flex items-center space-x-4">
 						<Progress value={progress} className="flex-1 h-2 bg-zinc-900 rounded-full" />
 						<span className="text-sm text-zinc-400 font-medium min-w-[80px]">
-							{currentIndex + 1} / {flashcards.length} cards
+							{currentIndex + 1} / {processedFlashcards.length} cards
 						</span>
 					</div>
+					{(filterOption !== 'all' || sortOption !== 'none') && (
+						<div className="mt-2 flex items-center space-x-2">
+							{filterOption !== 'all' && (
+								<Badge className="bg-blue-600 text-white">
+									{getFilterLabel(filterOption)}
+								</Badge>
+							)}
+							{sortOption !== 'none' && (
+								<Badge className="bg-green-600 text-white">
+									{getSortLabel(sortOption)}
+								</Badge>
+							)}
+						</div>
+					)}
 				</div>
 				<div className="flex items-center space-x-2 ml-6">
 					<Button
@@ -114,11 +277,99 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 					<Button
 						variant="ghost"
 						size="sm"
+						onClick={shuffleCards}
 						className="rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800"
 					>
 						<Shuffle className="h-4 w-4 mr-2" />
 						Shuffle
 					</Button>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								size="sm"
+								className="rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800"
+							>
+								<ArrowUpDown className="h-4 w-4 mr-2" />
+								Sort
+								<ChevronDown className="h-4 w-4 ml-1" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent className="bg-zinc-900 border-zinc-700">
+							<DropdownMenuItem
+								onClick={() => setSortOption('none')}
+								className={`text-zinc-300 hover:bg-zinc-800 hover:text-white ${sortOption === 'none' ? 'bg-zinc-800 text-white' : ''}`}
+							>
+								None
+							</DropdownMenuItem>
+							<DropdownMenuSeparator className="bg-zinc-700" />
+							<DropdownMenuItem
+								onClick={() => setSortOption('difficulty-asc')}
+								className={`text-zinc-300 hover:bg-zinc-800 hover:text-white ${sortOption === 'difficulty-asc' ? 'bg-zinc-800 text-white' : ''}`}
+							>
+								Difficulty (Easy → Hard)
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => setSortOption('difficulty-desc')}
+								className={`text-zinc-300 hover:bg-zinc-800 hover:text-white ${sortOption === 'difficulty-desc' ? 'bg-zinc-800 text-white' : ''}`}
+							>
+								Difficulty (Hard → Easy)
+							</DropdownMenuItem>
+							<DropdownMenuSeparator className="bg-zinc-700" />
+							<DropdownMenuItem
+								onClick={() => setSortOption('page-asc')}
+								className={`text-zinc-300 hover:bg-zinc-800 hover:text-white ${sortOption === 'page-asc' ? 'bg-zinc-800 text-white' : ''}`}
+							>
+								Page Number (Low → High)
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => setSortOption('page-desc')}
+								className={`text-zinc-300 hover:bg-zinc-800 hover:text-white ${sortOption === 'page-desc' ? 'bg-zinc-800 text-white' : ''}`}
+							>
+								Page Number (High → Low)
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								size="sm"
+								className="rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800"
+							>
+								<Funnel className="h-4 w-4 mr-2" />
+								Filter
+								<ChevronDown className="h-4 w-4 ml-1" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent className="bg-zinc-900 border-zinc-700">
+							<DropdownMenuItem
+								onClick={() => setFilterOption('all')}
+								className={`text-zinc-300 hover:bg-zinc-800 hover:text-white ${filterOption === 'all' ? 'bg-zinc-800 text-white' : ''}`}
+							>
+								All Cards ({flashcards.length})
+							</DropdownMenuItem>
+							<DropdownMenuSeparator className="bg-zinc-700" />
+							<DropdownMenuItem
+								onClick={() => setFilterOption('easy')}
+								className={`text-zinc-300 hover:bg-zinc-800 hover:text-white ${filterOption === 'easy' ? 'bg-zinc-800 text-white' : ''}`}
+							>
+								Easy ({flashcards.filter(c => c.difficulty.toLowerCase() === 'easy').length})
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => setFilterOption('medium')}
+								className={`text-zinc-300 hover:bg-zinc-800 hover:text-white ${filterOption === 'medium' ? 'bg-zinc-800 text-white' : ''}`}
+							>
+								Medium ({flashcards.filter(c => c.difficulty.toLowerCase() === 'medium').length})
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => setFilterOption('hard')}
+								className={`text-zinc-300 hover:bg-zinc-800 hover:text-white ${filterOption === 'hard' ? 'bg-zinc-800 text-white' : ''}`}
+							>
+								Hard ({flashcards.filter(c => c.difficulty.toLowerCase() === 'hard').length})
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 			</div>
 
@@ -163,9 +414,6 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 								</Badge>
 							</div>
 							<div className="text-center">
-								{/* <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-600 rounded-2xl mb-6">
-									<span className="text-white font-bold text-lg">Q</span>
-								</div> */}
 								<h3 className="text-xl font-semibold text-white mb-4">Question</h3>
 								<p className="text-zinc-300 text-lg leading-relaxed">{currentCard.question}</p>
 							</div>
@@ -191,13 +439,10 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 							}}
 						>
 							<div className="text-center">
-								{/* <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-600 rounded-2xl mb-6">
-									<span className="text-white font-bold text-lg">A</span>
-								</div> */}
 								<h3 className="text-xl font-semibold text-emerald-400 mb-4">Answer</h3>
 								<p className="text-zinc-300 text-lg leading-relaxed">{currentCard.answer}</p>
 								<p
-									className="mt-5 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-600 duration-300 bg-zinc-700 w-fit text-center m-auto p-1 rounded-lg"
+									className="mt-5 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-600 duration-300 bg-zinc-700 w-fit text-center m-auto p-1 rounded-lg cursor-pointer"
 									onClick={(e) => {
 										e.stopPropagation()
 										handlePageClick(currentCard.page_no)
@@ -226,7 +471,7 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 
 						<div className="px-6 py-2 text-sm text-zinc-400 font-medium">
 							<span className="text-white font-semibold">{currentIndex + 1}</span>
-							<span> / {flashcards.length}</span>
+							<span> / {processedFlashcards.length}</span>
 						</div>
 
 						<Button
