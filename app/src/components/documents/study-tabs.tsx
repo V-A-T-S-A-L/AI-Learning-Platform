@@ -45,31 +45,31 @@ export default function StudyTabs({
 			{/* Tabs Container - fills remaining height */}
 			<Tabs defaultValue="flashcards" className="flex-1 flex flex-col min-h-0">
 				{/* Fixed Tab Navigation - Always Visible */}
-				<TabsList className="flex-shrink-0 grid w-full grid-cols-4 bg-zinc-950 border-b border-zinc-800 rounded-none h-14">
+				<TabsList className="flex-shrink-0 grid w-full grid-cols-4 bg-black border-zinc-800 rounded-none h-14">
 					<TabsTrigger
 						value="flashcards"
-						className="cursor-pointer text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 rounded-xl mx-1 my-2 transition-all duration-200 data-[state=active]:bg-zinc-900 data-[state=active]:text-purple-400 data-[state=active]:shadow-lg"
+						className="cursor-pointer text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 mx-1 my-2 transition-all duration-200 data-[state=active]:bg-zinc-900 data-[state=active]:text-white data-[state=active]:shadow-lg"
 					>
 						<BookOpen className="h-4 w-4 mr-2" />
 						<span className="hidden sm:inline">Flashcards</span>
 					</TabsTrigger>
 					<TabsTrigger
 						value="chat"
-						className="cursor-pointer text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 rounded-xl mx-1 my-2 transition-all duration-200 data-[state=active]:bg-zinc-900 data-[state=active]:text-purple-400 data-[state=active]:shadow-lg"
+						className="cursor-pointer text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 mx-1 my-2 transition-all duration-200 data-[state=active]:bg-zinc-900 data-[state=active]:text-white data-[state=active]:shadow-lg"
 					>
 						<MessageSquare className="h-4 w-4 mr-2" />
 						<span className="hidden sm:inline">Chat</span>
 					</TabsTrigger>
 					<TabsTrigger
 						value="notes"
-						className="cursor-pointer text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 rounded-xl mx-1 my-2 transition-all duration-200 data-[state=active]:bg-zinc-900 data-[state=active]:text-purple-400 data-[state=active]:shadow-lg"
+						className="cursor-pointer text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 mx-1 my-2 transition-all duration-200 data-[state=active]:bg-zinc-900 data-[state=active]:text-white data-[state=active]:shadow-lg"
 					>
 						<FileText className="h-4 w-4 mr-2" />
 						<span className="hidden sm:inline">Notes</span>
 					</TabsTrigger>
 					<TabsTrigger
 						value="summary"
-						className="cursor-pointer text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 rounded-xl mx-1 my-2 transition-all duration-200 data-[state=active]:bg-zinc-900 data-[state=active]:text-purple-400 data-[state=active]:shadow-lg"
+						className="cursor-pointer text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 mx-1 my-2 transition-all duration-200 data-[state=active]:bg-zinc-900 data-[state=active]:text-white data-[state=active]:shadow-lg"
 					>
 						<ListChecks className="h-4 w-4 mr-2" />
 						<span className="hidden sm:inline">Summary</span>

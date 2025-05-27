@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { supabase } from "@/lib/supabaseClient"
 import Link from "next/link"
+import { usePDF } from "@/contexts/pdf-context"
 
 interface Document {
 	uuid: string
@@ -19,12 +20,20 @@ interface Document {
 }
 
 export default function DocumentViewer({ document }: { document: Document }) {
-	const [currentPage, setCurrentPage] = useState(1)
-	const [totalPages, setTotalPages] = useState(document?.pages || 1)
-	const [zoom, setZoom] = useState(100)
+	//const [currentPage, setCurrentPage] = useState(1)
 	const [pdfUrl, setPdfUrl] = useState<string | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
+	const [iframeKey, setIframeKey] = useState(0) // Add this to force iframe reload
+
+	const { currentPage } = usePDF();
+
+	useEffect(() => {
+		if (pdfUrl && currentPage > 0) {
+			// Force iframe to reload when page changes
+			setIframeKey(prev => prev + 1);
+		}
+	}, [currentPage, pdfUrl]);
 
 	useEffect(() => {
 		if (!document) return
@@ -89,10 +98,10 @@ export default function DocumentViewer({ document }: { document: Document }) {
 
 	if (!document) {
 		return (
-			<div className="flex items-center justify-center h-screen bg-black">
+			<div className="flex items-center justify-center h-full text-white">
 				<div className="text-center">
-					<div className="w-16 h-16 border-4 border-t-transparent border-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-					<p className="text-zinc-400">Loading document...</p>
+					<div className="m-auto animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+					<p>Loading Document...</p>
 				</div>
 			</div>
 		)
@@ -103,7 +112,7 @@ export default function DocumentViewer({ document }: { document: Document }) {
 			{/* Header */}
 			<div className="flex items-center justify-between p-6 border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-sm">
 				<Link href={"/dashboard"}>
-					<ChevronLeft className="text-white mr-4"/>
+					<ChevronLeft className="text-white mr-4" />
 				</Link>
 				<div className="flex-1 min-w-0">
 					<h1 className="text-xl font-semibold text-white truncate">{document.file_name}</h1>
@@ -111,7 +120,7 @@ export default function DocumentViewer({ document }: { document: Document }) {
 			</div>
 
 			{/* Document Display */}
-			<div id="document-viewer" className="border-r border-zinc-800 flex-1 overflow-auto bg-zinc-950 flex items-center justify-center p-6">
+			<div id="document-viewer" className="border-r border-zinc-800 flex-1 overflow-auto bg-black flex items-center justify-center p-6">
 				{isLoading ? (
 					<div className="text-center">
 						<Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
@@ -128,22 +137,14 @@ export default function DocumentViewer({ document }: { document: Document }) {
 				) : pdfUrl ? (
 					<div className="relative w-full h-full">
 						<div
-							style={{
-								transform: `scale(${zoom / 100})`,
-								transformOrigin: "center center",
-								transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-							}}
-							className="relative bg-white shadow-2xl rounded-2xl overflow-hidden w-full h-full"
+							className="relative bg-white rounded-2xl overflow-hidden w-full h-full"
 						>
 							{/* PDF Embed */}
 							<iframe
-								src={`${pdfUrl}#page=${currentPage}&zoom=${zoom}`}
+								key={iframeKey} // This forces the iframe to reload when page changes
+								src={`${pdfUrl}#page=${currentPage}`}
 								className="w-full h-full border-0"
 								title={`${document.file_name} - Page ${currentPage}`}
-								onLoad={() => {
-									// Try to extract page count from PDF if possible
-									// This is limited in iframe mode, but we can try
-								}}
 							/>
 						</div>
 					</div>
@@ -155,7 +156,7 @@ export default function DocumentViewer({ document }: { document: Document }) {
 						<p className="text-zinc-400">No document to display</p>
 					</div>
 				)}
-			</div>			
+			</div>
 		</div>
 	)
 }

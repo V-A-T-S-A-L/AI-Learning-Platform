@@ -90,10 +90,10 @@ const ContinueLearningSection: React.FC = () => {
                             >
                                 <Trash2 className="w-5 h-5" />
                             </button>
-                            <Link href={`documents/${file.id}`}>
+                            <Link className="text-center items-center" href={`documents/${file.id}`}>
                                 <button
                                     className="text-gray-400 hover:text-green-500 cursor-pointer"
-                                    title="Delete"
+                                    title="Open"
                                 >
                                     <ExternalLink className="w-5 h-5" />
                                 </button>

@@ -97,7 +97,7 @@ export default function UploadDocumentDialog({ children }: { children: React.Rea
 						>
 							<FileUpIcon className="h-12 w-12 mx-auto text-gray-500 mb-4" />
 							<p className="text-gray-400 mb-1">Click to upload or drag and drop</p>
-							<p className="text-xs text-gray-500">PDF, DOCX, or TXT (max 50MB)</p>
+							<p className="text-xs text-gray-500">Only .pdf fromat aloud!</p>
 							<Input
 								id="file-upload"
 								type="file"
@@ -139,7 +139,7 @@ export default function UploadDocumentDialog({ children }: { children: React.Rea
 				<DialogFooter>
 					<Button
 						type="button"
-						variant="outline"
+						variant="ghost"
 						onClick={() => setOpen(false)}
 						className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-gray-100"
 					>
@@ -149,7 +149,7 @@ export default function UploadDocumentDialog({ children }: { children: React.Rea
 						type="submit"
 						onClick={handleUpload}
 						disabled={!file || uploading}
-						className="bg-purple-600 hover:bg-purple-700"
+						className="cursor-pointer bg-purple-600 hover:bg-purple-700"
 					>
 						{uploading ? "Uploading..." : "Upload"}
 					</Button>

@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight, Check, X, RotateCcw, Shuffle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { useParams } from "next/navigation"
+import { usePDF } from "@/contexts/pdf-context"
 
 interface Flashcard {
 	id: string
@@ -16,13 +18,21 @@ interface Flashcard {
 }
 
 export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] }) {
-	
-	const [currentIndex, setCurrentIndex] = useState(0)
+
+	const params = useParams();
+	const docId = params?.id as string;
+
+	const [currentIndex, setCurrentIndex] = useState<number>(0)
 	const [flipped, setFlipped] = useState(false)
-	const [knownCards, setKnownCards] = useState<Set<string>>(new Set())
 
 	const currentCard = flashcards[currentIndex]
-	const progress = Math.round((currentIndex / flashcards.length) * 100)
+	const progress = Math.round(((currentIndex + 1) / flashcards.length) * 100)
+
+	const { setCurrentPage } = usePDF();
+
+	const handlePageClick = (pageNumber: number) => {
+		setCurrentPage(pageNumber);
+	};
 
 	const handlePrevCard = () => {
 		setFlipped(false)
@@ -39,7 +49,6 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 	}
 
 	const resetProgress = () => {
-		setKnownCards(new Set())
 		setCurrentIndex(0)
 		setFlipped(false)
 	}
@@ -57,33 +66,55 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 		}
 	}
 
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === 'ArrowRight') {
+				handleNextCard()
+			} else if (e.key === 'ArrowLeft') {
+				handlePrevCard()
+			} else if (e.key === ' ') {
+				e.preventDefault() // prevent spacebar from scrolling
+				toggleFlip()
+			}
+		}
+
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [currentIndex, flipped]) // dependencies
+
+
 	return (
 		<div className="h-full flex flex-col bg-black p-6">
 			{/* Header with Progress */}
 			<div className="flex items-center justify-between mb-8">
 				<div className="flex-1">
-					<h3 className="text-lg font-semibold text-white mb-2">Study Progress</h3>
+					<div className="flex items-center">
+						<h3 className="text-lg font-semibold text-white mb-2">Study Progress</h3>
+						{currentIndex + 1 == flashcards.length && (
+							<p className="text-sm font-semibold ml-3 text-green-300 mb-2">Completed!!</p>
+						)}
+					</div>
 					<div className="flex items-center space-x-4">
-						<Progress value={progress} className="flex-1 h-3 bg-zinc-900 rounded-full" />
+						<Progress value={progress} className="flex-1 h-2 bg-zinc-900 rounded-full" />
 						<span className="text-sm text-zinc-400 font-medium min-w-[80px]">
-							{currentIndex+1} / {flashcards.length} cards
+							{currentIndex + 1} / {flashcards.length} cards
 						</span>
 					</div>
 				</div>
 				<div className="flex items-center space-x-2 ml-6">
 					<Button
-						variant="outline"
+						variant="ghost"
 						size="sm"
 						onClick={resetProgress}
-						className="rounded-xl border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600 hover:bg-zinc-800"
+						className="rounded-xl text-zinc-400 hover:bg-zinc-800 hover:text-white"
 					>
 						<RotateCcw className="h-4 w-4 mr-2" />
 						Reset
 					</Button>
 					<Button
-						variant="outline"
+						variant="ghost"
 						size="sm"
-						className="rounded-xl border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600 hover:bg-zinc-800"
+						className="rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800"
 					>
 						<Shuffle className="h-4 w-4 mr-2" />
 						Shuffle
@@ -165,7 +196,15 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 								</div> */}
 								<h3 className="text-xl font-semibold text-emerald-400 mb-4">Answer</h3>
 								<p className="text-zinc-300 text-lg leading-relaxed">{currentCard.answer}</p>
-								<p className="mt-5 text-sm text-zinc-300 bg-zinc-700 w-fit text-center m-auto p-1 rounded-lg">Page no. {currentCard.page_no}</p>
+								<p
+									className="mt-5 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-600 duration-300 bg-zinc-700 w-fit text-center m-auto p-1 rounded-lg"
+									onClick={(e) => {
+										e.stopPropagation()
+										handlePageClick(currentCard.page_no)
+									}}
+								>
+									Page no. {currentCard.page_no}
+								</p>
 							</div>
 						</div>
 					</div>

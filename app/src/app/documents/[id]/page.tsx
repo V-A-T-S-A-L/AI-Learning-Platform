@@ -5,6 +5,7 @@ import DocumentViewer from "@/components/documents/document-viewer"
 import StudyTabs from "@/components/documents/study-tabs"
 import { supabase } from "@/lib/supabaseClient"
 import { useState, useEffect } from "react"
+import { PDFProvider } from "@/contexts/pdf-context"
 
 interface FileData {
 	uuid: string
@@ -27,9 +28,9 @@ async function pdfToBase64(file: Blob | null): Promise<string> {
 	if (!file) {
 		throw new Error("File is null or undefined")
 	}
-	
+
 	console.log("Converting file to base64, file type:", file.type, "size:", file.size)
-	
+
 	return new Promise((resolve, reject) => {
 		const reader = new FileReader()
 		reader.onload = () => {
@@ -101,7 +102,7 @@ export default function DocumentPage({ params }: { params: { id: string } }) {
 			try {
 				// Step 1: Fetch file data from Supabase
 				console.log("Fetching file data for docId:", docId)
-				
+
 				const { data, error } = await supabase
 					.from("user_files")
 					.select("*")
@@ -188,22 +189,24 @@ export default function DocumentPage({ params }: { params: { id: string } }) {
 	}
 
 	return (
-		<div className="flex flex-col lg:flex-row h-screen bg-black">
-			<div className="lg:w-1/2 h-full">
-				<DocumentViewer document={fileData} />
-			</div>
-			<div className="lg:w-1/2 h-full">
-				{loading ? (
-					<div className="flex items-center justify-center h-full text-white">
-						<div className="text-center">
-							<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-							<p>Generating flashcards...</p>
+		<PDFProvider>
+			<div className="flex flex-col lg:flex-row h-screen bg-black">
+				<div className="lg:w-1/2 h-full">
+					<DocumentViewer document={fileData} />
+				</div>
+				<div className="lg:w-1/2 h-full">
+					{loading ? (
+						<div className="flex items-center justify-center h-full text-white">
+							<div className="text-center">
+								<div className="m-auto animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+								<p>Generating flashcards...</p>
+							</div>
 						</div>
-					</div>
-				) : (
-					<StudyTabs document={fileData} flashcards={flashcards} />
-				)}
+					) : (
+						<StudyTabs document={fileData} flashcards={flashcards} />
+					)}
+				</div>
 			</div>
-		</div>
+		</PDFProvider>
 	)
 }
