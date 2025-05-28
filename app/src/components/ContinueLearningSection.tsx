@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
-import { User } from "@supabase/supabase-js"
 import { Trash2, Pencil, ExternalLink } from "lucide-react"
 import Link from "next/link"
 
@@ -16,6 +15,7 @@ interface UserFile {
 
 const ContinueLearningSection: React.FC = () => {
     const [userFiles, setUserFiles] = useState<UserFile[]>([])
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         const fetchFiles = async () => {
@@ -26,6 +26,7 @@ const ContinueLearningSection: React.FC = () => {
 
             if (userError || !user) {
                 console.error("User not found", userError)
+                setLoading(false)
                 return
             }
 
@@ -38,6 +39,7 @@ const ContinueLearningSection: React.FC = () => {
 
             if (error || !data) {
                 console.error("Error fetching files:", error)
+                setLoading(false)
                 return
             }
 
@@ -57,10 +59,13 @@ const ContinueLearningSection: React.FC = () => {
             )
 
             setUserFiles(filesWithThumbs)
+            setLoading(false)
         }
 
         fetchFiles()
     }, [])
+
+    const skeletonArray = new Array(4).fill(null)
 
     return (
         <div className="my-8">
@@ -72,46 +77,55 @@ const ContinueLearningSection: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {userFiles.map((file) => (
-                    <div
-                        key={file.id}
-                        className="group relative hover:-translate-y-1 hover:shadow-sm shadow-gray-500 duration-200 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl p-6 text-white overflow-hidden"
-                    >
-                        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                                className="text-gray-400 hover:text-yellow-300 cursor-pointer"
-                                title="Edit"
-                            >
-                                <Pencil className="w-5 h-5" />
-                            </button>
-                            <button
-                                className="text-gray-400 hover:text-red-500 cursor-pointer"
-                                title="Delete"
-                            >
-                                <Trash2 className="w-5 h-5" />
-                            </button>
-                            <Link className="text-center items-center" href={`documents/${file.id}`}>
-                                <button
-                                    className="text-gray-400 hover:text-green-500 cursor-pointer"
-                                    title="Open"
-                                >
-                                    <ExternalLink className="w-5 h-5" />
-                                </button>
-                            </Link>
-                        </div>
+                {loading
+                    ? skeletonArray.map((_, idx) => (
+                          <div
+                              key={idx}
+                              className="animate-pulse bg-gradient-to-br from-zinc-800 to-purple-400 rounded-xl p-6 h-[90px]"
+                          >
+                              <div className="h-4 bg-white/30 rounded w-2/3 mb-2"></div>
+                              <div className="h-3 bg-white/20 rounded w-1/2"></div>
+                          </div>
+                      ))
+                    : userFiles.map((file) => (
+                          <div
+                              key={file.id}
+                              className="group relative hover:-translate-y-1 hover:shadow-sm shadow-gray-500 duration-200 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl p-6 text-white overflow-hidden"
+                          >
+                              <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                      className="text-gray-400 hover:text-yellow-300 cursor-pointer"
+                                      title="Edit"
+                                  >
+                                      <Pencil className="w-5 h-5" />
+                                  </button>
+                                  <button
+                                      className="text-gray-400 hover:text-red-500 cursor-pointer"
+                                      title="Delete"
+                                  >
+                                      <Trash2 className="w-5 h-5" />
+                                  </button>
+                                  <Link className="text-center items-center" href={`documents/${file.id}`}>
+                                      <button
+                                          className="text-gray-400 hover:text-green-500 cursor-pointer"
+                                          title="Open"
+                                      >
+                                          <ExternalLink className="w-5 h-5" />
+                                      </button>
+                                  </Link>
+                              </div>
 
-                        <div>
-                            <h3 className="font-semibold text-sm truncate mb-1">
-                                {file.file_name}
-                            </h3>
-                            <p className="text-xs opacity-80">
-                                {new Date(file.created_at).toLocaleString()}
-                            </p>
-                        </div>
-                    </div>
-                ))}
+                              <div>
+                                  <h3 className="font-semibold text-sm truncate mb-1">
+                                      {file.file_name}
+                                  </h3>
+                                  <p className="text-xs opacity-80">
+                                      {new Date(file.created_at).toLocaleString()}
+                                  </p>
+                              </div>
+                          </div>
+                      ))}
             </div>
-
         </div>
     )
 }
