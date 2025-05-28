@@ -25,6 +25,33 @@ interface Flashcard {
 	difficulty: string
 }
 
+interface KeyTopic {
+	topic: string;
+	description: string;
+	pageNumbers: number[];
+	importance: 'high' | 'medium' | 'low';
+}
+
+interface LearningRecommendation {
+	type: 'prerequisite' | 'follow_up' | 'practice' | 'resource';
+	title: string;
+	description: string;
+	priority: 'high' | 'medium' | 'low';
+}
+
+interface PDFSummary {
+	overallSummary: string;
+	keyTopics: KeyTopic[];
+	learningRecommendations: LearningRecommendation[];
+	documentStats: {
+		totalPages: number;
+		estimatedReadingTime: number;
+		difficulty: 'beginner' | 'intermediate' | 'advanced';
+		category: string;
+	};
+	generatedAt: string;
+}
+
 // Utility function to convert PDF to base64
 async function pdfToBase64(file: Blob | null): Promise<string> {
 	if (!file) {
@@ -91,10 +118,63 @@ async function generateFlashcardsWithGemini(pdfBase64: string): Promise<Flashcar
 	}
 }
 
+// Function to generate PDF summary using Gemini AI
+async function generatePDFSummaryWithGemini(pdfBase64: string): Promise<PDFSummary> {
+	try {
+		const response = await fetch('/api/generate-summary', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				pdfBase64: pdfBase64
+			})
+		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		const data = await response.json();
+
+		// Validate and normalize the response
+		const summary: PDFSummary = {
+			overallSummary: data.overallSummary || '',
+			keyTopics: (data.keyTopics || []).map((topic: any) => ({
+				topic: topic.topic || '',
+				description: topic.description || '',
+				pageNumbers: Array.isArray(topic.pageNumbers) ? topic.pageNumbers : [],
+				importance: ['high', 'medium', 'low'].includes(topic.importance) ? topic.importance : 'medium'
+			})),
+			learningRecommendations: (data.learningRecommendations || []).map((rec: any) => ({
+				type: ['prerequisite', 'follow_up', 'practice', 'resource'].includes(rec.type) ? rec.type : 'resource',
+				title: rec.title || '',
+				description: rec.description || '',
+				priority: ['high', 'medium', 'low'].includes(rec.priority) ? rec.priority : 'medium'
+			})),
+			documentStats: {
+				totalPages: data.documentStats?.totalPages || 0,
+				estimatedReadingTime: data.documentStats?.estimatedReadingTime || 0,
+				difficulty: ['beginner', 'intermediate', 'advanced'].includes(data.documentStats?.difficulty)
+					? data.documentStats.difficulty : 'intermediate',
+				category: data.documentStats?.category || 'General'
+			},
+			generatedAt: new Date().toISOString()
+		};
+
+		return summary;
+	} catch (error) {
+		console.error('Error generating PDF summary:', error);
+		throw error;
+	}
+}
+
 export default function DocumentPage({ params }: { params: Promise<{ id: string }> }) {
 	const [fileData, setFileData] = useState<FileData | null>(null)
 	const [flashcards, setFlashcards] = useState<Flashcard[]>([])
+	const [pdfSummary, setPdfSummary] = useState<PDFSummary | null>(null)
 	const [loading, setLoading] = useState(false)
+	const [summaryLoading, setSummaryLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 
 	const { user } = useUser()
@@ -139,6 +219,7 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 				console.log("File data loaded successfully:", fileData)
 				setFileData(fileData)
 
+				// Check for existing flashcards
 				console.log("Checking for existing flashcards for file_id:", docId)
 				const { data: existingFlashcards, error: flashcardError } = await supabase
 					.from("gen_flashcard")
@@ -153,8 +234,27 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 					return
 				}
 
-				if (existingFlashcards && existingFlashcards.length > 0) {
-					console.log("Found existing flashcards:", existingFlashcards)
+				// Check for existing summary - use array query to avoid .single() errors
+				console.log("Checking for existing summary for file_id:", docId)
+				const { data: existingSummaries, error: summaryError } = await supabase
+					.from("pdf_summaries")
+					.select("*")
+					.eq("file_id", docId);
+
+				console.log("Existing summary result:", { existingSummaries, summaryError, count: existingSummaries?.length })
+
+				let existingSummary = null;
+				if (existingSummaries && existingSummaries.length > 0) {
+					existingSummary = existingSummaries[0]; // Get the first (should be only) summary
+					console.log("Found existing summary:", existingSummary);
+					setPdfSummary(JSON.parse(existingSummary.summary_data));
+				} else {
+					console.log("No existing summary found");
+				}
+
+				// If we have both existing flashcards and summary, no need to process PDF
+				if (existingFlashcards && existingFlashcards.length > 0 && existingSummary) {
+					console.log("Found existing flashcards and summary, skipping generation")
 					const normalizedFlashcards = existingFlashcards.map(card => ({
 						id: card.id,
 						question: card.question,
@@ -163,7 +263,6 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 						difficulty: card.difficulty || 'medium'
 					}))
 					setFlashcards(normalizedFlashcards)
-					setLoading(false)
 					return
 				}
 
@@ -173,8 +272,40 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 					return
 				}
 
-				console.log("Starting flashcard generation for:", fileData.file_path)
-				setLoading(true)
+				// Set existing flashcards if available
+				if (existingFlashcards && existingFlashcards.length > 0) {
+					console.log("Setting existing flashcards")
+					const normalizedFlashcards = existingFlashcards.map(card => ({
+						id: card.id,
+						question: card.question,
+						answer: card.answer,
+						page_no: String(card.page_no),
+						difficulty: card.difficulty || 'medium'
+					}))
+					setFlashcards(normalizedFlashcards)
+				}
+
+				// Determine what needs to be generated
+				const needsFlashcards = !existingFlashcards || existingFlashcards.length === 0
+				const needsSummary = !existingSummary
+
+				console.log("Content generation needs:", { 
+					needsFlashcards, 
+					needsSummary,
+					hasExistingFlashcards: !!(existingFlashcards && existingFlashcards.length > 0),
+					hasExistingSummary: !!existingSummary
+				})
+
+				// Only proceed if we actually need to generate something
+				if (!needsFlashcards && !needsSummary) {
+					console.log("All content already exists, skipping generation")
+					return
+				}
+
+				// Download and process PDF only if needed
+				console.log("Starting content generation for:", fileData.file_path)
+				if (needsFlashcards) setLoading(true)
+				if (needsSummary) setSummaryLoading(true)
 				setError(null)
 
 				console.log("Downloading PDF from storage...")
@@ -198,44 +329,74 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 				const pdfBase64 = await pdfToBase64(pdfBlob)
 				console.log("Base64 conversion successful, length:", pdfBase64.length)
 
-				console.log("Generating flashcards with Gemini...")
-				const generatedFlashcards = await generateFlashcardsWithGemini(pdfBase64)
-				console.log("Generated flashcards:", generatedFlashcards)
+				// Generate flashcards if needed
+				if (needsFlashcards) {
+					console.log("Generating flashcards with Gemini...")
+					const generatedFlashcards = await generateFlashcardsWithGemini(pdfBase64)
+					console.log("Generated flashcards:", generatedFlashcards)
 
-				const flashcardsToSave = generatedFlashcards.map(card => ({
-					id: card.id,
-					file_id: docId,
-					user_id: fileData.user_id,
-					question: card.question,
-					answer: card.answer,
-					page_no: card.page_no,
-					difficulty: card.difficulty || 'medium',
-					created_at: new Date().toISOString()
-				}))
+					const flashcardsToSave = generatedFlashcards.map(card => ({
+						id: card.id,
+						file_id: docId,
+						user_id: fileData.user_id,
+						question: card.question,
+						answer: card.answer,
+						page_no: card.page_no,
+						difficulty: card.difficulty || 'medium',
+						created_at: new Date().toISOString()
+					}))
 
-				const existingQuestions = new Set(existingFlashcards?.map(card => card.question) || [])
-				const uniqueFlashcards = flashcardsToSave.filter(card => !existingQuestions.has(card.question))
-
-				if (uniqueFlashcards.length > 0) {
-					console.log("Saving unique flashcards to Supabase:", uniqueFlashcards)
+					console.log("Saving flashcards to Supabase:", flashcardsToSave)
 					const { error: insertError } = await supabase
 						.from("gen_flashcard")
-						.insert(uniqueFlashcards)
+						.insert(flashcardsToSave)
 
 					if (insertError) {
 						console.error("Error saving flashcards:", insertError.message)
 						setError("Failed to save flashcards: " + insertError.message)
 						return
 					}
+
+					setFlashcards(generatedFlashcards)
+					setLoading(false)
 				}
 
-				setFlashcards(generatedFlashcards)
+				// Generate summary if needed
+				if (needsSummary) {
+					console.log("Generating new summary...")
+					const summary = await generatePDFSummaryWithGemini(pdfBase64)
+
+					// Save summary to database
+					const summaryToSave = {
+						id: uuidv4(),
+						file_id: docId,
+						user_id: user_id,
+						summary_data: JSON.stringify(summary),
+						created_at: new Date().toISOString()
+					};
+
+					console.log("Saving summary to database:", summaryToSave);
+					const { error: insertError } = await supabase
+						.from("pdf_summaries")
+						.insert(summaryToSave);
+
+					if (insertError) {
+						console.error("Error saving summary:", insertError);
+						// Still set the summary even if saving fails
+					} else {
+						console.log("Summary saved successfully");
+					}
+
+					setPdfSummary(summary)
+					setSummaryLoading(false)
+				}
 
 			} catch (err) {
 				console.error("Error in process:", err)
 				setError(err instanceof Error ? err.message : "Failed to process document")
 			} finally {
 				setLoading(false)
+				setSummaryLoading(false)
 			}
 		}
 
@@ -260,15 +421,25 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 					<DocumentViewer document={fileData} />
 				</div>
 				<div className="lg:w-1/2 h-full">
-					{loading ? (
+					{loading || summaryLoading ? (
 						<div className="flex items-center justify-center h-full text-white">
 							<div className="text-center">
 								<div className="m-auto animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-								<p>Generating flashcards...</p>
+								<p>
+									{loading && summaryLoading
+										? "Processing document..."
+										: loading
+											? "Generating flashcards..."
+											: "Generating summary..."}
+								</p>
 							</div>
 						</div>
 					) : (
-						<StudyTabs document={fileData} flashcards={flashcards} />
+						<StudyTabs
+							document={fileData}
+							flashcards={flashcards}
+							pdfSummary={pdfSummary}
+						/>
 					)}
 				</div>
 			</div>

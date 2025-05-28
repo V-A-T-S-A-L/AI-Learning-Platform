@@ -1,135 +1,203 @@
-"use client"
+import React from 'react';
+import { Clock, BookOpen, TrendingUp, AlertCircle, CheckCircle, ArrowRight, Star } from 'lucide-react';
 
-import { BookOpen, Clock, Target, Brain } from "lucide-react"
-
-interface Document {
-	id: string
-	title: string
-	type: string
-	url: string
-	pages: number
+interface KeyTopic {
+	topic: string;
+	description: string;
+	pageNumbers: number[];
+	importance: 'high' | 'medium' | 'low';
 }
 
-export default function SummaryView({ document }: { document: Document }) {
+interface LearningRecommendation {
+	type: 'prerequisite' | 'follow_up' | 'practice' | 'resource';
+	title: string;
+	description: string;
+	priority: 'high' | 'medium' | 'low';
+}
 
-	if (!document) return (
-		<div className="flex items-center justify-center h-screen bg-black">
-			<div className="w-16 h-16 border-4 border-t-transparent border-blue-500 rounded-full animate-spin"></div>
-		</div>
-	)
-	
-	// Mock summary data - in a real app, this would come from document analysis
-	const summaryData = {
-		keyTopics: [
-			"Supervised Learning Fundamentals",
-			"Classification vs Regression",
-			"Overfitting and Underfitting",
-			"Gradient Descent Optimization",
-			"Bias-Variance Tradeoff",
-			"Cross-validation Techniques"
-		],
-		studyTime: "45 minutes",
-		difficulty: "Intermediate",
-		keyInsights: [
-			"Supervised learning requires labeled training data to map inputs to outputs",
-			"The bias-variance tradeoff is crucial for model performance and generalization",
-			"Gradient descent iteratively optimizes model parameters to minimize cost functions",
-			"Cross-validation helps assess model performance on unseen data"
-		]
-	}
+interface PDFSummary {
+	overallSummary: string;
+	keyTopics: KeyTopic[];
+	learningRecommendations: LearningRecommendation[];
+	documentStats: {
+		totalPages: number;
+		estimatedReadingTime: number;
+		difficulty: 'beginner' | 'intermediate' | 'advanced';
+		category: string;
+	};
+	generatedAt?: string;
+}
+
+interface SummaryDisplayProps {
+	summary: PDFSummary;
+	className?: string;
+}
+
+const SummaryView: React.FC<SummaryDisplayProps> = ({ summary, className = "" }) => {
+
+	const getImportanceColor = (importance: string) => {
+		switch (importance) {
+			case 'high': return 'text-red-400 bg-red-900/20 border-red-500/30';
+			case 'medium': return 'text-yellow-400 bg-yellow-900/20 border-yellow-500/30';
+			case 'low': return 'text-green-400 bg-green-900/20 border-green-500/30';
+			default: return 'text-gray-400 bg-gray-900/20 border-gray-500/30';
+		}
+	};
+
+	const getPriorityColor = (priority: string) => {
+		switch (priority) {
+			case 'high': return 'text-red-400';
+			case 'medium': return 'text-yellow-400';
+			case 'low': return 'text-green-400';
+			default: return 'text-gray-400';
+		}
+	};
+
+	const getDifficultyColor = (difficulty: string) => {
+		switch (difficulty) {
+			case 'beginner': return 'text-green-400 bg-green-900/20';
+			case 'intermediate': return 'text-yellow-400 bg-yellow-900/20';
+			case 'advanced': return 'text-red-400 bg-red-900/20';
+			default: return 'text-gray-400 bg-gray-900/20';
+		}
+	};
+
+	const getRecommendationIcon = (type: string) => {
+		switch (type) {
+			case 'prerequisite': return <AlertCircle className="w-4 h-4" />;
+			case 'follow_up': return <ArrowRight className="w-4 h-4" />;
+			case 'practice': return <CheckCircle className="w-4 h-4" />;
+			case 'resource': return <BookOpen className="w-4 h-4" />;
+			default: return <Star className="w-4 h-4" />;
+		}
+	};
+
+	const formatPageNumbers = (pages: number[]) => {
+		if (pages.length === 0) return 'N/A';
+		if (pages.length === 1) return `Page ${pages[0]}`;
+
+		// Sort and group consecutive pages
+		const sorted = [...pages].sort((a, b) => a - b);
+		const groups: string[] = [];
+		let start = sorted[0];
+		let end = sorted[0];
+
+		for (let i = 1; i < sorted.length; i++) {
+			if (sorted[i] === end + 1) {
+				end = sorted[i];
+			} else {
+				groups.push(start === end ? `${start}` : `${start}-${end}`);
+				start = sorted[i];
+				end = sorted[i];
+			}
+		}
+		groups.push(start === end ? `${start}` : `${start}-${end}`);
+
+		return `Page${groups.length > 1 ? 's' : ''} ${groups.join(', ')}`;
+	};
 
 	return (
-		<div className="h-full bg-black p-6 overflow-y-auto">
-			<div className="max-w-4xl mx-auto space-y-8">
-				{/* Header */}
-				<div className="flex items-center mb-8">
-					<div className="flex items-center justify-center w-12 h-12 bg-purple-600 rounded-2xl mr-4">
-						<Brain className="h-6 w-6 text-white" />
+		<div className={`bg-black text-white p-6 rounded-lg space-y-6 ${className}`}>
+			{/* Header with Document Stats */}
+			<div className="border-b border-gray-700 pb-4">
+				<h2 className="text-2xl font-bold mb-4 text-white">Document Summary</h2>
+				<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+					<div className="bg-zinc-800 p-3 rounded-lg text-center">
+						<BookOpen className="w-5 h-5 mx-auto mb-1 text-blue-400" />
+						<div className="text-xl font-bold">{summary.documentStats.totalPages}</div>
+						<div className="text-xs text-gray-400">Pages</div>
 					</div>
-					<div>
-						<h2 className="text-2xl font-bold text-white">Document Summary</h2>
-						<p className="text-zinc-400">{document.title}</p>
+					<div className="bg-zinc-800 p-3 rounded-lg text-center">
+						<Clock className="w-5 h-5 mx-auto mb-1 text-green-400" />
+						<div className="text-xl font-bold">{summary.documentStats.estimatedReadingTime}</div>
+						<div className="text-xs text-gray-400">Minutes</div>
 					</div>
-				</div>
-
-				{/* Quick Stats */}
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-					<div className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800">
-						<div className="flex items-center mb-3">
-							<BookOpen className="h-5 w-5 text-purple-400 mr-2" />
-							<span className="text-sm font-medium text-zinc-300">Pages</span>
+					<div className="bg-zinc-800 p-3 rounded-lg text-center">
+						<TrendingUp className="w-5 h-5 mx-auto mb-1 text-purple-400" />
+						<div className={`text-sm font-semibold px-2 py-1 rounded ${getDifficultyColor(summary.documentStats.difficulty)}`}>
+							{summary.documentStats.difficulty.charAt(0).toUpperCase() + summary.documentStats.difficulty.slice(1)}
 						</div>
-						<p className="text-2xl font-bold text-white">{document.pages}</p>
 					</div>
-
-					<div className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800">
-						<div className="flex items-center mb-3">
-							<Clock className="h-5 w-5 text-blue-400 mr-2" />
-							<span className="text-sm font-medium text-zinc-300">Est. Study Time</span>
-						</div>
-						<p className="text-2xl font-bold text-white">{summaryData.studyTime}</p>
-					</div>
-
-					<div className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800">
-						<div className="flex items-center mb-3">
-							<Target className="h-5 w-5 text-green-400 mr-2" />
-							<span className="text-sm font-medium text-zinc-300">Difficulty</span>
-						</div>
-						<p className="text-2xl font-bold text-white">{summaryData.difficulty}</p>
-					</div>
-				</div>
-
-				{/* Key Topics */}
-				<div className="bg-zinc-950 rounded-2xl p-6 border border-zinc-800">
-					<h3 className="text-lg font-semibold text-white mb-4">Key Topics Covered</h3>
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-						{summaryData.keyTopics.map((topic, index) => (
-							<div key={index} className="flex items-center p-3 bg-zinc-900 rounded-xl">
-								<div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
-								<span className="text-zinc-300">{topic}</span>
-							</div>
-						))}
-					</div>
-				</div>
-
-				{/* Key Insights */}
-				<div className="bg-zinc-950 rounded-2xl p-6 border border-zinc-800">
-					<h3 className="text-lg font-semibold text-white mb-4">Key Insights</h3>
-					<div className="space-y-4">
-						{summaryData.keyInsights.map((insight, index) => (
-							<div key={index} className="flex items-start p-4 bg-zinc-900 rounded-xl">
-								<div className="flex items-center justify-center w-6 h-6 bg-purple-600 rounded-full mr-4 mt-0.5 flex-shrink-0">
-									<span className="text-white text-sm font-bold">{index + 1}</span>
-								</div>
-								<p className="text-zinc-300 leading-relaxed">{insight}</p>
-							</div>
-						))}
-					</div>
-				</div>
-
-				{/* Study Recommendations */}
-				<div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 rounded-2xl p-6 border border-purple-500/20">
-					<h3 className="text-lg font-semibold text-white mb-4">Study Recommendations</h3>
-					<div className="space-y-3">
-						<div className="flex items-center text-zinc-300">
-							<div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-							Start with supervised learning fundamentals before moving to advanced topics
-						</div>
-						<div className="flex items-center text-zinc-300">
-							<div className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></div>
-							Practice implementing gradient descent with simple examples
-						</div>
-						<div className="flex items-center text-zinc-300">
-							<div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
-							Use flashcards to memorize key definitions and concepts
-						</div>
-						<div className="flex items-center text-zinc-300">
-							<div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
-							Test understanding with practice problems on bias-variance tradeoff
-						</div>
+					<div className="bg-zinc-800 p-3 rounded-lg text-center">
+						<div className="text-sm font-bold text-gray-300">{summary.documentStats.category}</div>
+						<div className="text-xs text-gray-400">Category</div>
 					</div>
 				</div>
 			</div>
+
+			{/* Overall Summary */}
+			<div>
+				<h3 className="text-xl font-semibold mb-3 text-white">Overview</h3>
+				<div className="bg-zinc-800 p-4 rounded-lg">
+					<p className="text-gray-300 leading-relaxed whitespace-pre-line">{summary.overallSummary}</p>
+				</div>
+			</div>
+
+			{/* Key Topics */}
+			{summary.keyTopics.length > 0 && (
+				<div>
+					<h3 className="text-xl font-semibold mb-3 text-white">Key Topics</h3>
+					<div className="space-y-3">
+						{summary.keyTopics.map((topic, index) => (
+							<div key={index} className="bg-zinc-800 p-4 rounded-lg border-l-4 border-zinc-500">
+								<div className="flex items-start justify-between mb-2">
+									<h4 className="text-lg font-semibold text-white">{topic.topic}</h4>
+									<div className="flex items-center space-x-2">
+										<span className={`px-2 py-1 text-xs rounded-full border ${getImportanceColor(topic.importance)}`}>
+											{topic.importance}
+										</span>
+										<span className="text-xs text-gray-400">
+											{formatPageNumbers(topic.pageNumbers)}
+										</span>
+									</div>
+								</div>
+								<p className="text-gray-300 text-sm">{topic.description}</p>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
+
+			{/* Learning Recommendations */}
+			{summary.learningRecommendations.length > 0 && (
+				<div>
+					<h3 className="text-xl font-semibold mb-3 text-white">Learning Recommendations</h3>
+					<div className="grid gap-3">
+						{summary.learningRecommendations.map((rec, index) => (
+							<div key={index} className="bg-zinc-800 p-4 rounded-lg">
+								<div className="flex items-start space-x-3">
+									<div className={`p-2 rounded`}>
+										{getRecommendationIcon(rec.type)}
+									</div>
+									<div className="flex-1">
+										<div className="flex items-center justify-between mb-1">
+											<h4 className="font-semibold text-white">{rec.title}</h4>
+											<div className="flex items-center space-x-2">
+												<span className={`text-xs px-2 py-1 rounded capitalize ${getPriorityColor(rec.priority)}`}>
+													{rec.priority}
+												</span>
+												<span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300 capitalize">
+													{rec.type.replace('_', ' ')}
+												</span>
+											</div>
+										</div>
+										<p className="text-gray-300 text-sm">{rec.description}</p>
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
+
+			{/* Footer */}
+			{summary.generatedAt && (
+				<div className="text-xs text-gray-500 text-center pt-4 border-t border-gray-700">
+					Generated on {new Date(summary.generatedAt).toLocaleString()}
+				</div>
+			)}
 		</div>
-	)
-}
+	);
+};
+
+export default SummaryView;
