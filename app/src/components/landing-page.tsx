@@ -57,7 +57,7 @@ export default function LandingPage() {
 						className="flex items-center gap-2"
 					>
 						<Cpu className="h-6 w-6 text-purple-500" />
-						<span className="font-bold text-xl">TechNova</span>
+						<span className="font-bold text-xl">FlashMe</span>
 					</motion.div>
 					<nav className="hidden md:flex items-center gap-8">
 						{["Features", "Products", "About", "Testimonials"].map((item, i) => (
@@ -470,7 +470,7 @@ export default function LandingPage() {
 					</div>
 
 					<div className="space-y-24">
-						{/* TechNova Cloud */}
+						{/* FlashMe Cloud */}
 						<div className="grid md:grid-cols-2 gap-12 items-center">
 							<motion.div
 								initial={{ opacity: 0, x: -50 }}
@@ -479,7 +479,7 @@ export default function LandingPage() {
 								transition={{ duration: 0.8 }}
 								className="space-y-6"
 							>
-								<h3 className="text-3xl font-bold">TechNova Cloud</h3>
+								<h3 className="text-3xl font-bold">FlashMe Cloud</h3>
 								<p className="text-gray-300 text-lg">
 									A scalable cloud platform that adapts to your needs. Deploy applications with ease and manage
 									resources efficiently.
@@ -513,7 +513,7 @@ export default function LandingPage() {
 							</motion.div>
 						</div>
 
-						{/* TechNova Analytics */}
+						{/* FlashMe Analytics */}
 						<div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
 							<motion.div
 								initial={{ opacity: 0, x: 50 }}
@@ -522,7 +522,7 @@ export default function LandingPage() {
 								transition={{ duration: 0.8 }}
 								className="order-1 md:order-last space-y-4 md:space-y-6"
 							>
-								<h3 className="text-2xl md:text-3xl font-bold">TechNova Analytics</h3>
+								<h3 className="text-2xl md:text-3xl font-bold">FlashMe Analytics</h3>
 								<p className="text-gray-300 text-base md:text-lg">
 									Gain valuable insights from your data with our powerful analytics platform. Make data-driven decisions
 									with confidence.
@@ -557,7 +557,7 @@ export default function LandingPage() {
 							</motion.div>
 						</div>
 
-						{/* TechNova Security */}
+						{/* FlashMe Security */}
 						<div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
 							<motion.div
 								initial={{ opacity: 0, x: -50 }}
@@ -566,7 +566,7 @@ export default function LandingPage() {
 								transition={{ duration: 0.8 }}
 								className="space-y-4 md:space-y-6 order-1 md:order-1"
 							>
-								<h3 className="text-2xl md:text-3xl font-bold">TechNova Security</h3>
+								<h3 className="text-2xl md:text-3xl font-bold">FlashMe Security</h3>
 								<p className="text-gray-300 text-base md:text-lg">
 									Protect your digital assets with our comprehensive security solution. Stay ahead of threats with
 									advanced protection.
@@ -622,7 +622,7 @@ export default function LandingPage() {
 						>
 							<h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-4 md:mb-6">About Our Mission</h2>
 							<p className="text-gray-300 mb-4 md:mb-6 text-sm sm:text-base md:text-lg">
-								Founded in 2023, TechNova was created with a singular vision: to democratize access to cutting-edge
+								Founded in 2023, FlashMe was created with a singular vision: to democratize access to cutting-edge
 								technology. We believe that powerful tools should be accessible to everyone, regardless of technical
 								expertise.
 							</p>
@@ -684,7 +684,7 @@ export default function LandingPage() {
 							<h2 className="text-3xl md:text-5xl font-bold mb-4">What Our Clients Say</h2>
 							<p className="text-gray-400 max-w-2xl mx-auto">
 								Don't just take our word for it. Here's what our clients have to say about their experience with
-								TechNova.
+								FlashMe.
 							</p>
 						</motion.div>
 					</div>
@@ -696,21 +696,21 @@ export default function LandingPage() {
 								role: "CTO, TechStart Inc.",
 								image: "https://avatar.vercel.sh/jill",
 								content:
-									"TechNova has completely transformed our development workflow. The platform's intuitive design and powerful features have increased our team's productivity by over 40%.",
+									"FlashMe has completely transformed our development workflow. The platform's intuitive design and powerful features have increased our team's productivity by over 40%.",
 							},
 							{
 								name: "Michael Chen",
 								role: "Founder, DataFlow",
 								image: "https://avatar.vercel.sh/jill",
 								content:
-									"Implementing TechNova was one of the best decisions we've made. The seamless integration and robust API have allowed us to focus on what matters most - building great products.",
+									"Implementing FlashMe was one of the best decisions we've made. The seamless integration and robust API have allowed us to focus on what matters most - building great products.",
 							},
 							{
 								name: "Emily Rodriguez",
 								role: "Lead Developer, InnovateCorp",
 								image: "https://avatar.vercel.sh/jill",
 								content:
-									"As a developer, I appreciate the attention to detail in TechNova's platform. The documentation is comprehensive, and the support team is always ready to help.",
+									"As a developer, I appreciate the attention to detail in FlashMe's platform. The documentation is comprehensive, and the support team is always ready to help.",
 							},
 						].map((testimonial, index) => (
 							<motion.div
@@ -755,7 +755,7 @@ export default function LandingPage() {
 						>
 							<h2 className="text-3xl md:text-5xl font-bold mb-4">Ready to Get Started?</h2>
 							<p className="text-gray-300 mb-8 text-lg">
-								Join thousands of satisfied users who have already transformed their workflow with TechNova.
+								Join thousands of satisfied users who have already transformed their workflow with FlashMe.
 							</p>
 						</motion.div>
 
@@ -835,7 +835,7 @@ export default function LandingPage() {
 						<div>
 							<div className="flex items-center gap-2 mb-6">
 								<Cpu className="h-6 w-6 text-purple-500" />
-								<span className="font-bold text-xl">TechNova</span>
+								<span className="font-bold text-xl">FlashMe</span>
 							</div>
 							<p className="text-gray-400 mb-6">
 								Empowering innovation through technology. We build tools that help businesses thrive in the digital age.
@@ -891,7 +891,7 @@ export default function LandingPage() {
 					</div>
 
 					<div className="mt-16 pt-8 border-t border-gray-800/50 flex flex-col md:flex-row justify-between items-center gap-4">
-						<p className="text-gray-400 text-sm">&copy; {new Date().getFullYear()} TechNova. All rights reserved.</p>
+						<p className="text-gray-400 text-sm">&copy; {new Date().getFullYear()} FlashMe. All rights reserved.</p>
 						<div className="flex gap-6">
 							<a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
 								Privacy Policy
