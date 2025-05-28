@@ -1,3 +1,4 @@
+//app/src/app/documents/[id]/page.tsx
 "use client"
 
 import { notFound } from "next/navigation"

@@ -1,7 +1,13 @@
+//app/src/components/ViewAllDocumentsPage
+"use client"
+
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { Trash2, Pencil, ExternalLink } from "lucide-react"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { toast } from "react-toastify"
 
 interface UserFile {
     id: number
@@ -16,6 +22,8 @@ interface UserFile {
 const ContinueLearningSection: React.FC = () => {
     const [userFiles, setUserFiles] = useState<UserFile[]>([])
     const [loading, setLoading] = useState(true)
+    const [editingFileId, setEditingFileId] = useState<number | null>(null)
+    const [newFileName, setNewFileName] = useState<string>("")
 
     useEffect(() => {
         const fetchFiles = async () => {
@@ -65,15 +73,80 @@ const ContinueLearningSection: React.FC = () => {
         fetchFiles()
     }, [])
 
+    // Handle file rename
+    const handleRename = async (file: UserFile) => {
+        if (!newFileName.trim()) {
+            toast.error("File name cannot be empty")
+            return
+        }
+
+        const { data, error } = await supabase
+            .from("user_files")
+            .update({ file_name: newFileName })
+            .eq("id", file.id)
+            .select()
+            .single()
+
+        if (error) {
+            console.error("Error renaming file:", error)
+            toast.error("Failed to rename file: " + error.message)
+            return
+        }
+
+        // Update local state to reflect the change
+        setUserFiles(userFiles.map(f => 
+            f.id === file.id ? { ...f, file_name: newFileName } : f
+        ))
+        setEditingFileId(null)
+        setNewFileName("")
+        toast.success("File renamed successfully")
+    }
+
+    // Handle file deletion
+    const handleDelete = async (file: UserFile) => {
+        if (!confirm(`Are you sure you want to delete "${file.file_name}"?`)) {
+            return
+        }
+
+        // Delete from storage
+        const { error: storageError } = await supabase.storage
+            .from("files")
+            .remove([file.file_path])
+
+        if (storageError) {
+            console.error("Error deleting file from storage:", storageError)
+            toast.error("Failed to delete file from storage: " + storageError.message)
+            return
+        }
+
+        // Delete from database
+        const { error: dbError } = await supabase
+            .from("user_files")
+            .delete()
+            .eq("id", file.id)
+
+        if (dbError) {
+            console.error("Error deleting file from database:", dbError)
+            toast.error("Failed to delete file: " + dbError.message)
+            return
+        }
+
+        // Update local state
+        setUserFiles(userFiles.filter(f => f.id !== file.id))
+        toast.success("File deleted successfully")
+    }
+
     const skeletonArray = new Array(4).fill(null)
 
     return (
         <div className="my-8">
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Continue learning</h2>
-                <button className="text-sm text-gray-400 hover:text-white transition-colors">
-                    View all
-                </button>
+                <Link href="/viewalldocument">
+                    <button className="text-sm text-gray-400 hover:text-white transition-colors">
+                        View all
+                    </button>
+                </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -96,12 +169,17 @@ const ContinueLearningSection: React.FC = () => {
                                   <button
                                       className="text-gray-400 hover:text-yellow-300 cursor-pointer"
                                       title="Edit"
+                                      onClick={() => {
+                                          setEditingFileId(file.id)
+                                          setNewFileName(file.file_name)
+                                      }}
                                   >
                                       <Pencil className="w-5 h-5" />
                                   </button>
                                   <button
                                       className="text-gray-400 hover:text-red-500 cursor-pointer"
                                       title="Delete"
+                                      onClick={() => handleDelete(file)}
                                   >
                                       <Trash2 className="w-5 h-5" />
                                   </button>
@@ -115,14 +193,39 @@ const ContinueLearningSection: React.FC = () => {
                                   </Link>
                               </div>
 
-                              <div>
-                                  <h3 className="font-semibold text-sm truncate mb-1">
-                                      {file.file_name}
-                                  </h3>
-                                  <p className="text-xs opacity-80">
-                                      {new Date(file.created_at).toLocaleString()}
-                                  </p>
-                              </div>
+                              {editingFileId === file.id ? (
+                                  <div className="flex flex-col gap-2">
+                                      <Input
+                                          value={newFileName}
+                                          onChange={(e) => setNewFileName(e.target.value)}
+                                          className="text-black"
+                                          placeholder="New file name"
+                                      />
+                                      <div className="flex gap-2">
+                                          <Button
+                                              onClick={() => handleRename(file)}
+                                              className="bg-green-500 hover:bg-green-600"
+                                          >
+                                              Save
+                                          </Button>
+                                          <Button
+                                              onClick={() => setEditingFileId(null)}
+                                              className="bg-gray-500 hover:bg-gray-600"
+                                              >
+                                              Cancel
+                                          </Button>
+                                      </div>
+                                  </div>
+                              ) : (
+                                  <div>
+                                      <h3 className="font-semibold text-sm truncate mb-1">
+                                          {file.file_name}
+                                      </h3>
+                                      <p className="text-xs opacity-80">
+                                          {new Date(file.created_at).toLocaleString()}
+                                      </p>
+                                  </div>
+                              )}
                           </div>
                       ))}
             </div>
