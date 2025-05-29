@@ -284,7 +284,7 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 						answer: card.answer,
 						page_no: String(card.page_no),
 						difficulty: card.difficulty || 'medium',
-						star: false
+						star: card.star
 					}))
 					setFlashcards(normalizedFlashcards)
 				}
