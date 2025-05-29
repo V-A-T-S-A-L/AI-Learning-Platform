@@ -4,7 +4,7 @@
 import { redirect } from "next/navigation"
 import { useRouter } from "next/navigation"
 import { PlusIcon, BookOpenIcon, MessageSquareIcon, FileTextIcon } from "lucide-react"
-import { Upload, Link, Mic, ArrowUp, Plus, Trash2, Menu, Sparkles } from 'lucide-react';
+import { Upload, Mic, ArrowUp, Plus, Trash2, Menu, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import UploadDocumentDialog from "@/components/upload-document-dialog"
@@ -12,55 +12,7 @@ import { useEffect, useState } from "react"
 import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabaseClient'
 import ContinueLearningSection from "@/components/ContinueLearningSection";
-
-
-// Mock data for previously uploaded documents
-const documents = [
-    {
-        id: "1",
-        title: "Machine Learning Fundamentals",
-        type: "PDF",
-        uploadedAt: "2 days ago",
-        pages: 42,
-        flashcards: 120,
-        thumbnail: "/placeholder.svg?height=100&width=80",
-    },
-    {
-        id: "2",
-        title: "Web Development Guide",
-        type: "DOCX",
-        uploadedAt: "1 week ago",
-        pages: 78,
-        flashcards: 215,
-        thumbnail: "/placeholder.svg?height=100&width=80",
-    },
-    {
-        id: "3",
-        title: "Data Structures & Algorithms",
-        type: "PDF",
-        uploadedAt: "3 weeks ago",
-        pages: 103,
-        flashcards: 310,
-        thumbnail: "/placeholder.svg?height=100&width=80",
-    },
-    {
-        id: "4",
-        title: "Python Programming",
-        type: "PDF",
-        uploadedAt: "1 month ago",
-        pages: 65,
-        flashcards: 180,
-        thumbnail: "/placeholder.svg?height=100&width=80",
-    },
-]
-
-// Mock data for user stats
-const userStats = {
-    totalDocuments: 12,
-    totalFlashcards: 1250,
-    studyStreak: 7,
-    lastStudied: "Today",
-}
+import Link from "next/link";
 
 export default function HomePage() {
 
@@ -107,12 +59,14 @@ export default function HomePage() {
             {/* Header */}
             <header className="flex items-center justify-between p-4 border-b border-gray-800">
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-                            <span className="text-black font-bold text-sm">FM</span>
+                    <Link href="/">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                                <span className="text-black font-bold text-sm">FM</span>
+                            </div>
+                            <span className="text-xl font-semibold">FlashMe</span>
                         </div>
-                        <span className="text-xl font-semibold">FlashMe</span>
-                    </div>
+                    </Link>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -131,7 +85,7 @@ export default function HomePage() {
                 <div className="flex justify-center mb-8">
                     <div className="flex items-center gap-2 px-4 py-2 bg-green-900/20 border border-green-500 rounded-full text-green-400 text-sm">
                         <span className="px-2 py-1 bg-green-500 text-black text-xs rounded font-medium">NEW</span>
-                        <span>Practice with exams</span>
+                        <span>Generate Summary!</span>
                         <ArrowUp className="w-4 h-4 rotate-45" />
                     </div>
                 </div>
@@ -185,7 +139,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Continue Learning Section */}
-                <ContinueLearningSection />                
+                <ContinueLearningSection />
             </main>
         </div>
     );

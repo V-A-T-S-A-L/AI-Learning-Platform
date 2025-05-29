@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
-import { Trash2, Pencil, ExternalLink } from "lucide-react"
+import { Trash2, Pencil, ExternalLink, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -137,7 +137,10 @@ const ViewAllDocumentsPage: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-t from-black via-[#000] to-[#340258] text-white">
-            <header className="flex items-center justify-between p-4 border-b border-gray-800">
+            <header className="flex items-center p-4 border-b border-gray-800">
+                <Link href="/dashboard">
+                    <ChevronLeft className="mr-2"/>
+                </Link>
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
@@ -146,11 +149,6 @@ const ViewAllDocumentsPage: React.FC = () => {
                         <span className="text-xl font-semibold">FlashMe</span>
                     </div>
                 </div>
-                <Link href="/dashboard">
-                    <button className="text-sm text-gray-400 hover:text-white transition-colors">
-                        Back to Dashboard
-                    </button>
-                </Link>
             </header>
             <main className="max-w-4xl mx-auto px-4 py-8">
                 <div className="flex items-center justify-between mb-4">

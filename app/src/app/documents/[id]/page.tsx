@@ -24,6 +24,7 @@ interface Flashcard {
 	answer: string
 	page_no: string // Changed to string for consistency with Supabase and other components
 	difficulty: string
+	star: boolean
 }
 
 interface KeyTopic {
@@ -224,7 +225,7 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 				console.log("Checking for existing flashcards for file_id:", docId)
 				const { data: existingFlashcards, error: flashcardError } = await supabase
 					.from("gen_flashcard")
-					.select("id, question, answer, page_no, difficulty, created_at")
+					.select("id, question, answer, page_no, difficulty, created_at, star")
 					.eq("file_id", docId)
 
 				console.log("Existing flashcards result:", { existingFlashcards, flashcardError })
@@ -261,7 +262,8 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 						question: card.question,
 						answer: card.answer,
 						page_no: String(card.page_no), // Ensure string for consistency
-						difficulty: card.difficulty || 'medium'
+						difficulty: card.difficulty || 'medium',
+						star: card.star
 					}))
 					setFlashcards(normalizedFlashcards)
 					return
@@ -281,7 +283,8 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 						question: card.question,
 						answer: card.answer,
 						page_no: String(card.page_no),
-						difficulty: card.difficulty || 'medium'
+						difficulty: card.difficulty || 'medium',
+						star: false
 					}))
 					setFlashcards(normalizedFlashcards)
 				}

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { ChevronLeft, ChevronRight, Check, X, RotateCcw, Shuffle, ArrowUpDown, Funnel, ChevronDown } from "lucide-react"
+import { ChevronLeft, ChevronRight, Check, X, RotateCcw, Shuffle, ArrowUpDown, Funnel, ChevronDown, Star, StarOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { useParams } from "next/navigation"
 import { usePDF } from "@/contexts/pdf-context"
+import { supabase } from "@/lib/supabaseClient"
 
 interface Flashcard {
 	id: string
@@ -16,10 +17,11 @@ interface Flashcard {
 	answer: string
 	difficulty: string
 	page_no: string
+	star: boolean
 }
 
 type SortOption = 'difficulty-asc' | 'difficulty-desc' | 'page-asc' | 'page-desc' | 'none'
-type FilterOption = 'all' | 'easy' | 'medium' | 'hard'
+type FilterOption = 'all' | 'easy' | 'medium' | 'hard' | 'starred'
 
 export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] }) {
 	const params = useParams();
@@ -38,7 +40,11 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 		let filtered = [...flashcards]
 
 		// Apply filter
-		if (filterOption !== 'all') {
+		if (filterOption === 'starred') {
+			filtered = filtered.filter(card => card.star === true)
+		}
+
+		if (filterOption !== 'all' && filterOption !== 'starred') {
 			filtered = filtered.filter(card => card.difficulty.toLowerCase() === filterOption)
 		}
 
@@ -136,7 +142,27 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 			case 'easy': return 'Easy Cards'
 			case 'medium': return 'Medium Cards'
 			case 'hard': return 'Hard Cards'
+			case 'starred': return 'Starred'
 			default: return 'All Cards'
+		}
+	}
+
+	const toggleStar = async (currentStarStatus: boolean) => {
+
+		console.warn(currentStarStatus)
+
+		const { data, error } = await supabase
+			.from("gen_flashcard")
+			.update({ star: !currentStarStatus })
+			.eq("id", currentCard.id)
+			.select()
+			.single()
+
+		if (error) {
+			console.error("Error toggling star:", error)
+			return { error }
+		} else {
+			currentCard.star = !currentCard.star
 		}
 	}
 
@@ -286,6 +312,12 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 							>
 								Hard ({flashcards.filter(c => c.difficulty.toLowerCase() === 'hard').length})
 							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => setFilterOption('starred')}
+								className="text-zinc-300 hover:bg-zinc-800 hover:text-white"
+							>
+								Starred ({flashcards.filter(c => c.star === true).length})
+							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
@@ -317,7 +349,7 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 					</div>
 				</div>
 			)}
-			
+
 			{/* Flashcard (from both returns, merged) */}
 			{!(processedFlashcards.length === 0 || !flashcards || flashcards.length === 0 || !currentCard) && (
 				<div className="flex-1 flex items-center justify-center">
@@ -353,7 +385,20 @@ export default function FlashcardView({ flashcards }: { flashcards: Flashcard[] 
 									padding: "2rem",
 								}}
 							>
-								<div className="absolute top-6 right-6">
+								<div className="absolute top-6 right-6 flex items-center">
+									<button
+										className="cursor-pointer"
+										onClick={(e) => {
+											e.stopPropagation()
+											toggleStar(currentCard.star)
+										}} 
+									>
+										{currentCard.star ? (
+											<StarOff className="text-white w-5 h-5 mr-3" />
+										) : (
+											<Star className="text-white w-5 h-5 mr-3" />
+										)}
+									</button>
 									<Badge className={`${getDifficultyColor(currentCard.difficulty)} rounded-full px-3 py-1`}>
 										{currentCard.difficulty}
 									</Badge>

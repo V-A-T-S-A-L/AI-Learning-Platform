@@ -23,6 +23,7 @@ interface Flashcard {
 	answer: string
 	difficulty: string
 	page_no: string
+	star: boolean
 }
 
 interface KeyTopic {

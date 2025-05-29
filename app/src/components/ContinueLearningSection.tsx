@@ -143,9 +143,9 @@ const ContinueLearningSection: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Continue learning</h2>
                 <Link href="/viewalldocument">
-                    <button className="text-sm text-gray-400 hover:text-white transition-colors">
+                    <Button variant="ghost" className="rounded-xl text-zinc-300 hover:bg-zinc-800 hover:text-white">
                         View all
-                    </button>
+                    </Button>
                 </Link>
             </div>
 
@@ -204,13 +204,15 @@ const ContinueLearningSection: React.FC = () => {
                                       <div className="flex gap-2">
                                           <Button
                                               onClick={() => handleRename(file)}
-                                              className="bg-green-500 hover:bg-green-600"
+                                              variant="ghost"
+                                              className=""
                                           >
                                               Save
                                           </Button>
                                           <Button
                                               onClick={() => setEditingFileId(null)}
-                                              className="bg-gray-500 hover:bg-gray-600"
+                                              variant="ghost"
+                                              className=""
                                               >
                                               Cancel
                                           </Button>
