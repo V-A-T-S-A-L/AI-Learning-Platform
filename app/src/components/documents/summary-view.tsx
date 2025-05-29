@@ -1,5 +1,6 @@
 import React from 'react';
 import { Clock, BookOpen, TrendingUp, AlertCircle, CheckCircle, ArrowRight, Star } from 'lucide-react';
+import { usePDF } from '@/contexts/pdf-context';
 
 interface KeyTopic {
 	topic: string;
@@ -96,6 +97,12 @@ const SummaryView: React.FC<SummaryDisplayProps> = ({ summary, className = "" })
 		return `Page${groups.length > 1 ? 's' : ''} ${groups.join(', ')}`;
 	};
 
+	const { setCurrentPage } = usePDF();
+
+	const handlePageClick = (pageNumber: number) => {
+		setCurrentPage(pageNumber);
+	};
+
 	return (
 		<div className={`bg-black text-white p-6 rounded-lg space-y-6 ${className}`}>
 			{/* Header with Document Stats */}
@@ -146,7 +153,7 @@ const SummaryView: React.FC<SummaryDisplayProps> = ({ summary, className = "" })
 										<span className={`px-2 py-1 text-xs rounded-full border ${getImportanceColor(topic.importance)}`}>
 											{topic.importance}
 										</span>
-										<span className="text-xs text-gray-400">
+										<span className="text-xs bg-zinc-700 p-1 rounded-lg cursor-pointer text-white" onClick={(e) => handlePageClick(topic.pageNumbers[0])}>
 											{formatPageNumbers(topic.pageNumbers)}
 										</span>
 									</div>
