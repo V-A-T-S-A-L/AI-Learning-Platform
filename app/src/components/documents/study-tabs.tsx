@@ -129,7 +129,7 @@ export default function StudyTabs({
 						<ChatView document={document} />
 					</TabsContent>
 
-					<TabsContent value="notes" className="h-full m-0 overflow-auto p-4">
+					<TabsContent value="notes" className="h-full m-0 overflow-auto">
 						<NotesView document={document} />
 					</TabsContent>
 
@@ -138,8 +138,7 @@ export default function StudyTabs({
 					</TabsContent>
 
 					<TabsContent value="download" className="h-full m-0 overflow-auto">
-						<PDFGenerator document={document} flashcards={validFlashcards} summary={pdfSummary}
-						/>
+						<PDFGenerator document={document} flashcards={validFlashcards} summary={pdfSummary} />
 					</TabsContent>
 				</div>
 			</Tabs>
