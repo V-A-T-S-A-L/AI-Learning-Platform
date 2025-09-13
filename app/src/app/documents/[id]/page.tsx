@@ -184,7 +184,7 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 
 	useEffect(() => {
 		if (!user_id) return
-		
+
 		const fetchDataAndGenerateFlashcards = async () => {
 			const { id: docId } = await params
 
@@ -293,8 +293,8 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 				const needsFlashcards = !existingFlashcards || existingFlashcards.length === 0
 				const needsSummary = !existingSummary
 
-				console.log("Content generation needs:", { 
-					needsFlashcards, 
+				console.log("Content generation needs:", {
+					needsFlashcards,
 					needsSummary,
 					hasExistingFlashcards: !!(existingFlashcards && existingFlashcards.length > 0),
 					hasExistingSummary: !!existingSummary
@@ -422,7 +422,9 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 		<PDFProvider>
 			<div className="flex flex-col lg:flex-row h-screen bg-black">
 				<div className="lg:w-1/2 h-full">
-					<DocumentViewer document={fileData} />
+					{fileData && (
+						<DocumentViewer document={fileData} />
+					)}
 				</div>
 				<div className="lg:w-1/2 h-full">
 					{loading || summaryLoading ? (

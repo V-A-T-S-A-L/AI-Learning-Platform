@@ -3,7 +3,7 @@
 
 import { redirect } from "next/navigation"
 import { useRouter } from "next/navigation"
-import { PlusIcon, BookOpenIcon, MessageSquareIcon, FileTextIcon } from "lucide-react"
+import { PlusIcon, BookOpenIcon, MessageSquareIcon, FileTextIcon, Cpu } from "lucide-react"
 import { Upload, Mic, ArrowUp, Plus, Trash2, Menu, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -61,10 +61,8 @@ export default function HomePage() {
                 <div className="flex items-center gap-3">
                     <Link href="/">
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-                                <span className="text-black font-bold text-sm">FM</span>
-                            </div>
-                            <span className="text-xl font-semibold">FlashMe</span>
+                            <Cpu className="h-6 w-6 text-purple-500" />
+                            <span className="font-bold text-xl">CardGenX</span>
                         </div>
                     </Link>
                 </div>

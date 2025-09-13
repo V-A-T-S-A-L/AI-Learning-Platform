@@ -58,7 +58,7 @@ export default function LandingPage() {
 						className="flex items-center gap-2"
 					>
 						<Cpu className="h-6 w-6 text-purple-500" />
-						<span className="font-bold text-xl">FlashMe</span>
+						<span className="font-bold text-xl">CardGenX</span>
 					</motion.div>
 					<nav className="hidden md:flex items-center gap-8">
 						{["Features", "Products", "About", "Testimonials"].map((item, i) => (

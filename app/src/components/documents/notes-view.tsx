@@ -22,7 +22,7 @@ import { Link } from "@tiptap/extension-link"
 import { CodeBlock } from "@tiptap/extension-code-block"
 
 // Define the Document interface
-interface Document {
+interface MyDocument {
 	uuid: string
 	user_id: string
 	file_name: string
@@ -322,7 +322,7 @@ const SimpleToolbar = ({ editor }: { editor: any }) => {
 	)
 }
 
-export default function NotesView({ document }: { document: Document }) {
+export default function NotesView({ document }: { document: MyDocument }) {
 	const [notes, setNotes] = useState("")
 	const [isSaving, setIsSaving] = useState(false)
 	const [lastSaved, setLastSaved] = useState<Date | null>(null)

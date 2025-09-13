@@ -1,3 +1,5 @@
+"use client"
+
 import React from 'react';
 import { Clock, BookOpen, TrendingUp, AlertCircle, CheckCircle, ArrowRight, Star } from 'lucide-react';
 import { usePDF } from '@/contexts/pdf-context';
