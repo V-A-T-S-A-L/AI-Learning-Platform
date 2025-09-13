@@ -1,15 +1,20 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
-  /* existing config options here */
-
   // ⚡ Ignore ESLint errors during build
   eslint: {
     ignoreDuringBuilds: true,
   },
 
-  // ⚡ Remove the deprecated option and disable the dev indicator
+  // ⚡ Remove deprecated dev indicators
   devIndicators: false,
+
+  // ⚡ Add Webpack alias for @ → src
+  webpack: (config) => {
+    config.resolve.alias["@"] = path.resolve(__dirname, "src");
+    return config;
+  },
 };
 
 export default nextConfig;
